@@ -1,9 +1,6 @@
 package lk.ijse.springbootbackend.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
@@ -19,4 +16,12 @@ public class Wallet {
     private Long bankAccountId;
     private Double amount;
     private String status;
+
+    @OneToOne
+    @JoinColumn(name = "interviewerId")
+    private Interviewer interviewer;
+
+    @OneToOne
+    @JoinColumn(name = "bankAccountId")
+    private BankAccount defaultBankAccount;
 }
