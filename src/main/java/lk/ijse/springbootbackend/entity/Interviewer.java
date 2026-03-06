@@ -1,9 +1,6 @@
 package lk.ijse.springbootbackend.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
@@ -25,4 +22,8 @@ public class Interviewer {
     private String linkedinUrl;
     private String profilePicture;
     private String status;
+
+    @OneToOne
+    @JoinColumn(name = "authId")
+    private Auth auth;
 }
