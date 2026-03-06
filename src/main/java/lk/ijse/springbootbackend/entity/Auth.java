@@ -19,8 +19,6 @@ public class Auth {
     private String password;
     private String email;
     private String googleId;
-    private String facebookId;
-    private String githubId;
     private String role;
     private Boolean emailVerified;
     private String profilePic;
