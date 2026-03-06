@@ -1,9 +1,6 @@
 package lk.ijse.springbootbackend.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
@@ -24,4 +21,16 @@ public class Bookings {
     private String candidateNote;
     private String meetingLink;
     private String status;
+
+    @ManyToOne
+    @JoinColumn(name = "candidateId")
+    private Candidate candidate;
+
+    @ManyToOne
+    @JoinColumn(name = "interviewerId")
+    private Interviewer interviewer;
+
+    @ManyToOne
+    @JoinColumn(name = "levelId")
+    private Level level;
 }
