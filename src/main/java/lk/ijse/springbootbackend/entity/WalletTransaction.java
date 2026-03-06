@@ -1,0 +1,4 @@
+package lk.ijse.springbootbackend.entity;
+
+public class WalletTransaction {
+}
