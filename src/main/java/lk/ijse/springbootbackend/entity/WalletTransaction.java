@@ -1,9 +1,6 @@
 package lk.ijse.springbootbackend.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
@@ -20,4 +17,12 @@ public class WalletTransaction {
     private String transactionTime;
     private String referenceNumber;
     private String status;
+
+    @ManyToOne
+    @JoinColumn(name = "walletId")
+    private Wallet wallet;
+
+    @OneToOne
+    @JoinColumn(name = "bookingId")
+    private Bookings booking;
 }
