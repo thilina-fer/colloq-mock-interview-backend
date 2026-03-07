@@ -2,17 +2,19 @@ package lk.ijse.springbootbackend.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
+@Data
 public class Candidate {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long candidateId;
-    private Long authId;
+//    private Long authId;
     private String joinDate;
     private String bio;
     private String githubUrl;

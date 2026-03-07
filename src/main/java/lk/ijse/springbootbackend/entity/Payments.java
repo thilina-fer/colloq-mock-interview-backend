@@ -11,7 +11,7 @@ public class Payments {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long paymentId;
-    private Long bookingId;
+//    private Long bookingId;
     private String paymentType;
     private String status;
 
