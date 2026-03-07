@@ -12,7 +12,7 @@ public class Interviewer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long interviewerId;
-    private Long authId;
+//    private Long authId;
     private String bio;
     private String company;
     private String designation;
