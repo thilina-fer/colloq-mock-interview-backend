@@ -12,7 +12,7 @@ public class SessionFeedback {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long feedbackId;
-    private Long bookingId;
+//    private Long bookingId;
     private Integer rating;
     private String feedbackComment;
     private String status;

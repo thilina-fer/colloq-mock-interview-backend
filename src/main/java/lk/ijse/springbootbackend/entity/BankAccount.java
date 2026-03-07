@@ -12,7 +12,7 @@ public class BankAccount {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long bankAccountId;
-    private Long interviewerId;
+//    private Long interviewerId;
     private String bankName;
     private String accountNumber;
     private Boolean isDefault;
