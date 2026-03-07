@@ -12,8 +12,8 @@ public class WithdrawalRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long withdrawalId;
-    private Long transactionId;
-    private Long walletId;
+//    private Long transactionId;
+//    private Long walletId;
     private Double requestedAmount;
     private String processedDate;
     private String processedTime;
