@@ -1,21 +1,13 @@
-package lk.ijse.springbootbackend.entity;
+package lk.ijse.springbootbackend.dto.auth;
 
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class Interviewer {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long interviewerId;
-//    private Long authId;
-    private String joinSDate;
+public class CompleteInterviewerProfileDTO {
     private String bio;
     private String company;
     private String designation;
@@ -25,8 +17,4 @@ public class Interviewer {
     private String linkedinUrl;
     private String profilePicture;
     private String status;
-
-    @OneToOne
-    @JoinColumn(name = "authId")
-    private Auth auth;
 }
