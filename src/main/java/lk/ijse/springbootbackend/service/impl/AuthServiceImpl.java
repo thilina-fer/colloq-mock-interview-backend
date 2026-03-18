@@ -5,6 +5,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import lk.ijse.springbootbackend.dto.auth.AuthDTO;
+import lk.ijse.springbootbackend.dto.auth.AuthMeDTO;
 import lk.ijse.springbootbackend.dto.auth.AuthResponseDTO;
 import lk.ijse.springbootbackend.dto.auth.GoogleAuthDTO;
 import lk.ijse.springbootbackend.dto.auth.RegisterDTO;
@@ -33,6 +34,10 @@ public class AuthServiceImpl implements AuthService {
     @Value("${google.client.id}")
     private String googleClientId;
 
+    // =========================
+    // LOGIN
+    // =========================
+
     @Override
     public AuthResponseDTO authenticate(AuthDTO authDTO) {
 
@@ -53,6 +58,10 @@ public class AuthServiceImpl implements AuthService {
         return new AuthResponseDTO(token);
     }
 
+    // =========================
+    // REGISTER
+    // =========================
+
     @Override
     public String register(RegisterDTO registerDTO) {
 
@@ -67,6 +76,7 @@ public class AuthServiceImpl implements AuthService {
                 .role(String.valueOf(Role.valueOf(registerDTO.getRole())))
                 .status("ACTIVE")
                 .emailVerified(false)
+                .profileUpdated(false)
                 .build();
 
         authRepo.save(auth);
@@ -74,9 +84,15 @@ public class AuthServiceImpl implements AuthService {
         return "User registered successfully";
     }
 
+    // =========================
+    // GOOGLE LOGIN
+    // =========================
+
     @Override
     public AuthResponseDTO authenticateWithGoogle(GoogleAuthDTO googleAuthDTO) {
+
         try {
+
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
                     new NetHttpTransport(),
                     GsonFactory.getDefaultInstance()
@@ -101,34 +117,63 @@ public class AuthServiceImpl implements AuthService {
                     .orElseGet(() -> authRepo.findByEmail(email).orElse(null));
 
             if (auth == null) {
+
                 auth = Auth.builder()
                         .username(email)
                         .password(null)
                         .email(email)
                         .googleId(googleId)
                         .role(googleAuthDTO.getRole())
-                        .emailVerified(emailVerified != null ? emailVerified : false)
+                        .emailVerified(emailVerified != null && emailVerified)
                         .profilePic(picture)
                         .status("ACTIVE")
+                        .profileUpdated(false)
                         .build();
+
             } else {
+
                 auth.setGoogleId(googleId);
                 auth.setEmail(email);
-                auth.setEmailVerified(emailVerified != null ? emailVerified : false);
+                auth.setEmailVerified(emailVerified != null && emailVerified);
                 auth.setProfilePic(picture);
 
                 if (auth.getRole() == null && googleAuthDTO.getRole() != null) {
                     auth.setRole(googleAuthDTO.getRole());
                 }
+
             }
 
             authRepo.save(auth);
 
             String token = jwtUtil.generateToken(auth.getUsername());
+
             return new AuthResponseDTO(token);
 
         } catch (Exception e) {
             throw new RuntimeException("Google authentication failed: " + e.getMessage());
         }
     }
+
+    // =========================
+    // CURRENT USER (/me)
+    // =========================
+
+    @Override
+    public AuthMeDTO getCurrentUser(String username) {
+
+        Auth auth = authRepo.findByUsername(username)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("User not found: " + username));
+
+        return new AuthMeDTO(
+                auth.getUsername(),
+                auth.getEmail(),
+                auth.getRole(),
+                auth.getEmailVerified(),
+                auth.getProfilePic(),
+                auth.getStatus(),
+                auth.isProfileUpdated()
+        );
+    }
+
 }
