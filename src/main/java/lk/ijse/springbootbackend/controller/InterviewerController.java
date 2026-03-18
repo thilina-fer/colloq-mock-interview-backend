@@ -4,14 +4,12 @@ import lk.ijse.springbootbackend.dto.auth.CompleteInterviewerProfileDTO;
 import lk.ijse.springbootbackend.service.InterviewerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/interviewer")
 @RequiredArgsConstructor
+@CrossOrigin("*")
 public class InterviewerController {
     private final InterviewerService interviewerService;
 
