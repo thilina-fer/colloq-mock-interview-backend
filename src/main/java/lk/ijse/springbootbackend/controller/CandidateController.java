@@ -15,7 +15,7 @@
     @RestController
     @RequestMapping("/api/v1/candidate")
     @RequiredArgsConstructor
-    @CrossOrigin("*")
+    @CrossOrigin("http://localhost:5173")
     public class CandidateController {
 
         private final CandidateService candidateService;
