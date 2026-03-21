@@ -1,8 +1,7 @@
 package lk.ijse.springbootbackend.service;
 
 import lk.ijse.springbootbackend.dto.auth.CompleteCandidateProfileDTO;
-import lk.ijse.springbootbackend.dto.candidate.CandidateResponseDTO;
-import lk.ijse.springbootbackend.entity.Candidate;
+import lk.ijse.springbootbackend.dto.CandidateResponseDTO;
 
 import java.util.List;
 

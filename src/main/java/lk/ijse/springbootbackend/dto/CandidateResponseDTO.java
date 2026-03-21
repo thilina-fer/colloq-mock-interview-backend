@@ -1,5 +1,5 @@
 // dto/candidate/CandidateResponseDTO.java
-package lk.ijse.springbootbackend.dto.candidate;
+package lk.ijse.springbootbackend.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

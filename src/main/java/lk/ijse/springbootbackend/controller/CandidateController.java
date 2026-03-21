@@ -2,8 +2,7 @@
 
     import lk.ijse.springbootbackend.dto.APIResponse;
     import lk.ijse.springbootbackend.dto.auth.CompleteCandidateProfileDTO;
-    import lk.ijse.springbootbackend.dto.candidate.CandidateResponseDTO;
-    import lk.ijse.springbootbackend.entity.Candidate;
+    import lk.ijse.springbootbackend.dto.CandidateResponseDTO;
     import lk.ijse.springbootbackend.service.CandidateService;
     import lombok.RequiredArgsConstructor;
     import org.springframework.http.ResponseEntity;

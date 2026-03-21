@@ -1,7 +1,7 @@
 package lk.ijse.springbootbackend.service.impl;
 
 import lk.ijse.springbootbackend.dto.auth.CompleteCandidateProfileDTO;
-import lk.ijse.springbootbackend.dto.candidate.CandidateResponseDTO;
+import lk.ijse.springbootbackend.dto.CandidateResponseDTO;
 import lk.ijse.springbootbackend.entity.Auth;
 import lk.ijse.springbootbackend.entity.Candidate;
 import lk.ijse.springbootbackend.repo.AuthRepo;
