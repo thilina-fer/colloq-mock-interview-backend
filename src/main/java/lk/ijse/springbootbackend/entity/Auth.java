@@ -27,4 +27,5 @@ public class Auth {
     private Boolean emailVerified;
     private String profilePic;
     private String status;
+    private boolean profileUpdated;
 }

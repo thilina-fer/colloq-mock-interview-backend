@@ -1,13 +1,12 @@
 package lk.ijse.springbootbackend.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class Level {
@@ -15,8 +14,9 @@ public class Level {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long levelId;
-    private String description;
-    private String sessionDuration;
+    @Column(nullable = false, unique = true)
+    private String name;
+    private Integer sessionDuration; // minutes
     private Double price;
-    private String status;
+    private String status; // ACTIVE / INACTIVE
 }

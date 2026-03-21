@@ -1,15 +1,15 @@
 package lk.ijse.springbootbackend.controller;
 
-import lk.ijse.springbootbackend.dto.auth.AuthDTO;
-import lk.ijse.springbootbackend.dto.auth.AuthResponseDTO;
-import lk.ijse.springbootbackend.dto.auth.RegisterDTO;
+import lk.ijse.springbootbackend.dto.auth.*;
 import lk.ijse.springbootbackend.service.AuthService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
+@CrossOrigin("http://localhost:5173")
 public class AuthController {
 
     private final AuthService authService;
@@ -22,5 +22,15 @@ public class AuthController {
     @PostMapping("/register")
     public String register(@RequestBody RegisterDTO registerDTO) {
         return authService.register(registerDTO);
+    }
+
+    @PostMapping("/google")
+    public AuthResponseDTO googleLogin(@RequestBody GoogleAuthDTO googleAuthDTO) {
+        return authService.authenticateWithGoogle(googleAuthDTO);
+    }
+
+    @GetMapping("/me")
+    public AuthMeDTO me(Authentication authentication){
+        return authService.getCurrentUser(authentication.getName());
     }
 }

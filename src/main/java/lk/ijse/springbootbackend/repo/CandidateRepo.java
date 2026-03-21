@@ -9,4 +9,5 @@ import java.util.Optional;
 
 public interface CandidateRepo extends JpaRepository<Candidate, Long> {
     boolean existsByAuth(Auth auth);
+    Optional<Candidate> findByAuth(Auth auth);
 }
