@@ -32,7 +32,7 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults()) // CORS enable කිරීම
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**").permitAll() // Register/Login වලට අවසර
+                        .requestMatchers("/api/v1/**").permitAll() // Register/Login වලට අවසර
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
