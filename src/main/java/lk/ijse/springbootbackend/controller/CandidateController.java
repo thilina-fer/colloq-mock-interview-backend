@@ -2,8 +2,7 @@
 
     import lk.ijse.springbootbackend.dto.APIResponse;
     import lk.ijse.springbootbackend.dto.auth.CompleteCandidateProfileDTO;
-    import lk.ijse.springbootbackend.dto.candidate.CandidateResponseDTO;
-    import lk.ijse.springbootbackend.entity.Candidate;
+    import lk.ijse.springbootbackend.dto.CandidateResponseDTO;
     import lk.ijse.springbootbackend.service.CandidateService;
     import lombok.RequiredArgsConstructor;
     import org.springframework.http.ResponseEntity;
@@ -15,7 +14,7 @@
     @RestController
     @RequestMapping("/api/v1/candidate")
     @RequiredArgsConstructor
-    @CrossOrigin("*")
+    @CrossOrigin("http://localhost:5173")
     public class CandidateController {
 
         private final CandidateService candidateService;
