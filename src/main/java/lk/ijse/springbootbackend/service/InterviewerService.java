@@ -1,7 +1,7 @@
 package lk.ijse.springbootbackend.service;
 
 import lk.ijse.springbootbackend.dto.auth.CompleteInterviewerProfileDTO;
-import lk.ijse.springbootbackend.dto.interviewer.InterviewerResponseDTO;
+import lk.ijse.springbootbackend.dto.InterviewerResponseDTO;
 
 import java.util.List;
 

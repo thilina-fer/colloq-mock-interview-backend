@@ -2,7 +2,7 @@ package lk.ijse.springbootbackend.controller;
 
 import lk.ijse.springbootbackend.dto.APIResponse;
 import lk.ijse.springbootbackend.dto.auth.CompleteInterviewerProfileDTO;
-import lk.ijse.springbootbackend.dto.interviewer.InterviewerResponseDTO;
+import lk.ijse.springbootbackend.dto.InterviewerResponseDTO;
 import lk.ijse.springbootbackend.service.InterviewerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

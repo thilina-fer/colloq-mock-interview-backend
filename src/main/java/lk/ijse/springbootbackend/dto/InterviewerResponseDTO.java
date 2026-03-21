@@ -1,5 +1,5 @@
 // dto/interviewer/InterviewerResponseDTO.java
-package lk.ijse.springbootbackend.dto.interviewer;
+package lk.ijse.springbootbackend.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
