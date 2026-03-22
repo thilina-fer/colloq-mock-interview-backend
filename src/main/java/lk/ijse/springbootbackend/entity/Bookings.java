@@ -9,14 +9,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class Bookings {
 
+public class Bookings {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long bookingId;
-//    private Long candidateId;
-//    private Long interviewerId;
-//    private Long levelId;
+
+    private Long candidateId;
+    private Long interviewerId;
+    private Long levelId;
     private String jobType;
     private String scheduleDate;
     private String scheduleTime;
