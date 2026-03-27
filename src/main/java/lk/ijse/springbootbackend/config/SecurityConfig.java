@@ -32,12 +32,20 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults()) // CORS enable කිරීම
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/**").permitAll() // Register/Login වලට අවසර
+                        // 1. Auth API (Login, Register) walata witarak Token nathuwa yanna denawa
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+
+                        // 2. Candidate saha Interviewer API walata aniwaryayen JWT Token eka oni!
+                        .requestMatchers("/api/v1/candidate/**").authenticated()
+                        .requestMatchers("/api/v1/interviewer/**").authenticated()
+
+                        // 3. Anith okkoma API calls secure karanawa
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+                // Filter eka add karanawa JWT eka check karanna
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

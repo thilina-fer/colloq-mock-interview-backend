@@ -2,12 +2,14 @@
 package lk.ijse.springbootbackend.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class InterviewerResponseDTO {
     private Long interviewerId;
     private String username;
@@ -22,4 +24,8 @@ public class InterviewerResponseDTO {
     private String profilePicture;
     private String status;
     private String joinSDate;
+
+
+    public InterviewerResponseDTO(Long interviewerId, String username, String email, String bio, String company, String designation, Integer experienceYears, String specialization, String githubUrl, String linkedinUrl, String profilePicture, String status) {
+    }
 }
