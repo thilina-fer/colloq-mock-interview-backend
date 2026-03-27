@@ -49,7 +49,7 @@ public class InterviewerAvailabilityImpl implements InterviewerAvailabilityServi
         InterviewerAvailability existing = availabilityRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Slot not found"));
 
-        // දත්ත update කිරීම
+
         existing.setDate(dto.getDate());
         existing.setStartTime(dto.getStartTime());
         existing.setEndTime(dto.getEndTime());

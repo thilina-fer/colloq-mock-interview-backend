@@ -29,8 +29,8 @@ public class Bookings {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private BookingStatus status = BookingStatus.PENDING_APPROVAL;
+    @Column(nullable = false , length = 50)
+    private BookingStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "candidateId", nullable = false)
