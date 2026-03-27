@@ -1,5 +1,7 @@
 package lk.ijse.springbootbackend.service.impl;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import lk.ijse.springbootbackend.dto.auth.CompleteCandidateProfileDTO;
 import lk.ijse.springbootbackend.dto.CandidateResponseDTO;
 import lk.ijse.springbootbackend.entity.Auth;
@@ -9,8 +11,10 @@ import lk.ijse.springbootbackend.repo.CandidateRepo;
 import lk.ijse.springbootbackend.service.CandidateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,9 +23,10 @@ public class CandidateServiceImpl implements CandidateService {
 
     private final CandidateRepo candidateRepo;
     private final AuthRepo authRepo;
+    private final Cloudinary cloudinary; // Cloudinary eka inject kala
 
     @Override
-    public String completeCandidateProfile(CompleteCandidateProfileDTO dto, String username) {
+    public String completeCandidateProfile(CompleteCandidateProfileDTO dto, MultipartFile imageFile, String username) {
 
         Auth auth = authRepo.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Auth user not found"));
@@ -36,8 +41,20 @@ public class CandidateServiceImpl implements CandidateService {
         candidate.setBio(dto.getBio());
         candidate.setGithubUrl(dto.getGithubUrl());
         candidate.setLinkedinUrl(dto.getLinkedinUrl());
-        candidate.setProfilePicture(dto.getProfilePicture());
         candidate.setStatus("ACTIVE");
+
+        // Cloudinary Image Upload Logic
+        try {
+            if (imageFile != null && !imageFile.isEmpty()) {
+                Map uploadResult = cloudinary.uploader().upload(imageFile.getBytes(),
+                        ObjectUtils.asMap("folder", "colloq_profiles"));
+                candidate.setProfilePicture(uploadResult.get("url").toString());
+            } else {
+                candidate.setProfilePicture(dto.getProfilePicture()); // default ui-avatar eka
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to upload image: " + e.getMessage());
+        }
 
         candidateRepo.save(candidate);
 
@@ -56,21 +73,43 @@ public class CandidateServiceImpl implements CandidateService {
     }
 
     @Override
-    public String updateCandidateProfile(CompleteCandidateProfileDTO dto, String username) {
+    public CandidateResponseDTO updateCandidateProfile(CandidateResponseDTO dto, MultipartFile imageFile, String username) {
         Auth auth = authRepo.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Auth user not found"));
 
         Candidate candidate = candidateRepo.findByAuth(auth)
                 .orElseThrow(() -> new RuntimeException("Candidate profile not found"));
 
+        // Username update logic
+        if (dto.getUsername() != null && !dto.getUsername().isEmpty()) {
+            if (!auth.getUsername().equals(dto.getUsername())) {
+                if (authRepo.existsByUsername(dto.getUsername())) {
+                    throw new RuntimeException("Username already taken!");
+                }
+                auth.setUsername(dto.getUsername());
+                authRepo.save(auth);
+            }
+        }
+
         candidate.setBio(dto.getBio());
         candidate.setGithubUrl(dto.getGithubUrl());
         candidate.setLinkedinUrl(dto.getLinkedinUrl());
-        candidate.setProfilePicture(dto.getProfilePicture());
-        if (dto.getStatus() != null) candidate.setStatus(dto.getStatus());
+
+        // Image Upload
+        try {
+            if (imageFile != null && !imageFile.isEmpty()) {
+                Map uploadResult = cloudinary.uploader().upload(imageFile.getBytes(),
+                        ObjectUtils.asMap("folder", "colloq_profiles"));
+                candidate.setProfilePicture(uploadResult.get("url").toString());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to upload image");
+        }
 
         candidateRepo.save(candidate);
-        return "Candidate profile updated successfully";
+
+        // Meka thamai wadagath: Aluth data tika DTO ekakata harawala return karanna
+        return mapToDTO(candidate);
     }
 
     @Override
@@ -104,5 +143,4 @@ public class CandidateServiceImpl implements CandidateService {
                 candidate.getJoinDate()
         );
     }
-
 }
