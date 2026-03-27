@@ -15,5 +15,6 @@ public interface AuthService {
     AuthResponseDTO authenticateWithGoogle(GoogleAuthDTO googleAuthDTO);
 
     AuthMeDTO getCurrentUser(String username);
+    String createAdmin(RegisterDTO registerDTO);
 
 }

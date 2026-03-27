@@ -4,14 +4,11 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
-import lk.ijse.springbootbackend.dto.auth.AuthDTO;
-import lk.ijse.springbootbackend.dto.auth.AuthMeDTO;
-import lk.ijse.springbootbackend.dto.auth.AuthResponseDTO;
-import lk.ijse.springbootbackend.dto.auth.GoogleAuthDTO;
-import lk.ijse.springbootbackend.dto.auth.RegisterDTO;
+import lk.ijse.springbootbackend.dto.auth.*;
 import lk.ijse.springbootbackend.entity.Auth;
 import lk.ijse.springbootbackend.entity.Candidate;
 import lk.ijse.springbootbackend.entity.Interviewer;
+import lk.ijse.springbootbackend.entity.Role;
 import lk.ijse.springbootbackend.repo.AuthRepo;
 import lk.ijse.springbootbackend.repo.CandidateRepo;
 import lk.ijse.springbootbackend.repo.InterviewerRepo;
@@ -41,40 +38,40 @@ public class AuthServiceImpl implements AuthService {
     @Value("${google.client.id}")
     private String googleClientId;
 
-    // LOGIN - UPDATE KARAPU KALLA
     @Override
     public AuthResponseDTO authenticate(AuthDTO authDTO) {
+        // Username හෝ Email දෙකෙන් එකකින් Login වෙන්න ඉඩ දෙමු
         Auth auth = authRepo.findByUsername(authDTO.getUsername())
-                .orElseThrow(() ->
-                        new UsernameNotFoundException("User not found: " + authDTO.getUsername()));
+                .or(() -> authRepo.findByEmail(authDTO.getUsername()))
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         if (auth.getPassword() == null) {
             throw new BadCredentialsException("This account uses Google login");
         }
 
         if (!passwordEncoder.matches(authDTO.getPassword(), auth.getPassword())) {
-            throw new BadCredentialsException("Invalid username or password");
+            throw new BadCredentialsException("Invalid credentials");
         }
 
         String token = jwtUtil.generateToken(auth.getUsername());
-
-        // Token එක සමඟ Role එකත් Frontend එකට යවනවා
-        return new AuthResponseDTO(token, auth.getRole());
+        return new AuthResponseDTO(token, auth.getRole().name()); // Enum to String
     }
 
-    // REGISTER
     @Override
     @Transactional
     public String register(RegisterDTO registerDTO) {
-        if (authRepo.findByUsername(registerDTO.getUsername()).isPresent()) {
+        if (authRepo.existsByUsername(registerDTO.getUsername())) {
             throw new RuntimeException("Username already exists");
+        }
+        if (authRepo.existsByEmail(registerDTO.getEmail())) {
+            throw new RuntimeException("Email already exists");
         }
 
         Auth auth = Auth.builder()
                 .username(registerDTO.getUsername())
                 .password(passwordEncoder.encode(registerDTO.getPassword()))
                 .email(registerDTO.getEmail())
-                .role(registerDTO.getRole())
+                .role(registerDTO.getRole()) // Enum භාවිතා වේ
                 .status("ACTIVE")
                 .emailVerified(false)
                 .profileUpdated(false)
@@ -84,29 +81,21 @@ public class AuthServiceImpl implements AuthService {
         return "User registered successfully";
     }
 
-    // GOOGLE LOGIN - UPDATE KARAPU KALLA
     @Override
     @Transactional
     public AuthResponseDTO authenticateWithGoogle(GoogleAuthDTO googleAuthDTO) {
         try {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
-                    new NetHttpTransport(),
-                    GsonFactory.getDefaultInstance()
-            )
+                    new NetHttpTransport(), GsonFactory.getDefaultInstance())
                     .setAudience(Collections.singletonList(googleClientId))
                     .build();
 
             GoogleIdToken googleIdToken = verifier.verify(googleAuthDTO.getIdToken());
-
-            if (googleIdToken == null) {
-                throw new RuntimeException("Invalid Google ID token");
-            }
+            if (googleIdToken == null) throw new RuntimeException("Invalid Google ID token");
 
             GoogleIdToken.Payload payload = googleIdToken.getPayload();
             String googleId = payload.getSubject();
             String email = payload.getEmail();
-            String picture = (String) payload.get("picture");
-            Boolean emailVerified = payload.getEmailVerified();
 
             Auth auth = authRepo.findByGoogleId(googleId)
                     .orElseGet(() -> authRepo.findByEmail(email).orElse(null));
@@ -114,74 +103,76 @@ public class AuthServiceImpl implements AuthService {
             if (auth == null) {
                 auth = Auth.builder()
                         .username(email)
-                        .password(null)
                         .email(email)
                         .googleId(googleId)
-                        .role(googleAuthDTO.getRole())
-                        .emailVerified(emailVerified != null && emailVerified)
-                        .profilePic(picture)
+                        .role(Role.valueOf(googleAuthDTO.getRole())) // Enum භාවිතා වේ
+                        .emailVerified(true)
                         .status("ACTIVE")
                         .profileUpdated(false)
                         .build();
             } else {
                 auth.setGoogleId(googleId);
-                auth.setEmailVerified(emailVerified != null && emailVerified);
-                auth.setProfilePic(picture);
-                if (auth.getRole() == null && googleAuthDTO.getRole() != null) {
-                    auth.setRole(googleAuthDTO.getRole());
-                }
+                if (auth.getRole() == null) auth.setRole(Role.valueOf(googleAuthDTO.getRole()));
             }
 
             authRepo.save(auth);
             String token = jwtUtil.generateToken(auth.getUsername());
-
-            // Google login එකේදීත් Role එක යවනවා
-            return new AuthResponseDTO(token, auth.getRole());
+            return new AuthResponseDTO(token, auth.getRole().name());
 
         } catch (Exception e) {
-            throw new RuntimeException("Google authentication failed: " + e.getMessage());
+            throw new RuntimeException("Google auth failed: " + e.getMessage());
         }
     }
 
-    // CURRENT USER (/me)
     @Override
     public AuthMeDTO getCurrentUser(String username) {
         Auth auth = authRepo.findByUsername(username)
-                .orElseThrow(() ->
-                        new UsernameNotFoundException("User not found: " + username));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         AuthMeDTO dto = new AuthMeDTO();
         dto.setUsername(auth.getUsername());
         dto.setEmail(auth.getEmail());
-        dto.setRole(auth.getRole());
-        dto.setEmailVerified(auth.getEmailVerified());
-        dto.setProfilePic(auth.getProfilePic());
+        dto.setRole(auth.getRole().name()); // Enum name as String
         dto.setStatus(auth.getStatus());
         dto.setProfileUpdated(auth.isProfileUpdated());
 
-        if ("CANDIDATE".equalsIgnoreCase(auth.getRole())) {
-            Optional<Candidate> candidateOpt = candidateRepo.findByAuth(auth);
-            if (candidateOpt.isPresent()) {
-                Candidate candidate = candidateOpt.get();
-                dto.setBio(candidate.getBio());
-                dto.setGithubUrl(candidate.getGithubUrl());
-                dto.setLinkedinUrl(candidate.getLinkedinUrl());
-                if (candidate.getProfilePicture() != null) dto.setProfilePic(candidate.getProfilePicture());
-            }
-        } else if ("INTERVIEWER".equalsIgnoreCase(auth.getRole())) {
-            Optional<Interviewer> interviewerOpt = interviewerRepo.findByAuth(auth);
-            if (interviewerOpt.isPresent()) {
-                Interviewer interviewer = interviewerOpt.get();
-                dto.setBio(interviewer.getBio());
-                dto.setGithubUrl(interviewer.getGithubUrl());
-                dto.setLinkedinUrl(interviewer.getLinkedinUrl());
-                dto.setCompany(interviewer.getCompany());
-                dto.setDesignation(interviewer.getDesignation());
-                dto.setExperienceYears(interviewer.getExperienceYears());
-                dto.setSpecialization(interviewer.getSpecialization());
-                if (interviewer.getProfilePicture() != null) dto.setProfilePic(interviewer.getProfilePicture());
-            }
+        // Role එක අනුව අමතර දත්ත ලබාගැනීම
+        if (Role.CANDIDATE.equals(auth.getRole())) {
+            candidateRepo.findByAuth(auth).ifPresent(c -> {
+                dto.setBio(c.getBio());
+                dto.setGithubUrl(c.getGithubUrl());
+                dto.setLinkedinUrl(c.getLinkedinUrl());
+            });
+        } else if (Role.INTERVIEWER.equals(auth.getRole())) {
+            interviewerRepo.findByAuth(auth).ifPresent(i -> {
+                dto.setBio(i.getBio());
+                dto.setSpecialization(i.getSpecialization());
+                dto.setCompany(i.getCompany());
+            });
         }
         return dto;
+    }
+
+    @Override
+    @Transactional
+    public String createAdmin(RegisterDTO registerDTO) {
+        // 1. Email එක දැනටමත් තියෙනවද බලන්න
+        if (authRepo.existsByEmail(registerDTO.getEmail())) {
+            throw new RuntimeException("Email already exists");
+        }
+
+        // 2. අලුත් Admin කෙනෙක් විදිහට save කරන්න
+        Auth admin = Auth.builder()
+                .username(registerDTO.getUsername())
+                .email(registerDTO.getEmail())
+                .password(passwordEncoder.encode(registerDTO.getPassword()))
+                .role(Role.ADMIN) // කෙලින්ම ADMIN role එක දෙනවා
+                .status("ACTIVE")
+                .emailVerified(true)
+                .profileUpdated(true)
+                .build();
+
+        authRepo.save(admin);
+        return "New Admin added successfully by " + registerDTO.getUsername();
     }
 }
