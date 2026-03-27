@@ -31,6 +31,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
 
+        // Header එකක් නැත්නම් හෝ Bearer නොවෙයි නම් ඊළඟ filter එකට යවන්න
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -42,27 +43,35 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         try {
             username = jwtUtil.extractUsername(jwtToken);
         } catch (Exception e) {
+            // Token එක extract කරන්න බැරි නම් process එක නවත්තන්න
             filterChain.doFilter(request, response);
             return;
         }
 
+        // දැනටමත් authenticate වෙලා නැතිනම් පමණක් ඉදිරියට යන්න
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            Auth auth = authRepo.findByUsername(username).orElse(null);
+            // Username එකෙන් හෝ Email එකෙන් User ව හොයාගන්න (Login එකට ගැලපෙන ලෙස)
+            Auth auth = authRepo.findByUsername(username)
+                    .or(() -> authRepo.findByEmail(username))
+                    .orElse(null);
 
+            // Token එක validate කර බලන්න
             if (auth != null && jwtUtil.validateToken(jwtToken)) {
 
+                // වැදගත්ම කොටස: මෙතැනදී "ROLE_" prefix එක සමඟ Enum name එක ලබා දිය යුතුයි
                 UsernamePasswordAuthenticationToken authenticationToken =
                         new UsernamePasswordAuthenticationToken(
-                                auth.getUsername(),
+                                auth, // String එකක් වෙනුවට Auth object එකම ලබා දෙන්න
                                 null,
-                                List.of(new SimpleGrantedAuthority("ROLE_" + auth.getRole()))
+                                List.of(new SimpleGrantedAuthority("ROLE_" + auth.getRole().name()))
                         );
 
                 authenticationToken.setDetails(
                         new WebAuthenticationDetailsSource().buildDetails(request)
                 );
 
+                // SecurityContext එකට Authentication එක ඇතුළත් කිරීම
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             }
         }
