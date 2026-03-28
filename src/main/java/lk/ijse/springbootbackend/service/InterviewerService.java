@@ -14,4 +14,5 @@ public interface InterviewerService {
     List<InterviewerResponseDTO> getAllInterviewers();
     List<InterviewerResponseDTO> getPendingInterviewers();
     InterviewerResponseDTO approveInterviewer(Long interviewerId);
+    String rejectInterviewer(Long interviewerId);
 }

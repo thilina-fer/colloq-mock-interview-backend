@@ -392,4 +392,14 @@ public class InterviewerServiceImpl implements InterviewerService {
         // 4. Update වුණු දත්ත DTO එකක් ලෙස ආපහු යවන්න
         return mapToDTO(savedInterviewer);
     }
+    // InterviewerServiceImpl.java එකේ
+    @Override
+    @Transactional
+    public String rejectInterviewer(Long interviewerId) {
+        if (!interviewerRepo.existsById(interviewerId)) {
+            throw new RuntimeException("Interviewer not found");
+        }
+        interviewerRepo.deleteById(interviewerId); // 💡 DB එකෙන් අයින් කරනවා
+        return "Interviewer application rejected and removed successfully";
+    }
 }
