@@ -32,30 +32,33 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults()) // CORS enable කිරීම
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        // 1. Auth API (Login, Register) walata witarak Token nathuwa yanna denawa
+                        // 1. Auth API (Login, Register) - No Token Needed
                         .requestMatchers("/api/v1/auth/**").permitAll()
 
-                        // 2. Candidate saha Interviewer API walata aniwaryayen JWT Token eka oni!
-                        .requestMatchers("/api/v1/candidate/**").authenticated()
-                        .requestMatchers("/api/v1/interviewer/**").authenticated()
+                        // 2. Admin APIs - ADMIN ලට විතරයි අවසර දෙන්නේ
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
-                        // 3. Anith okkoma API calls secure karanawa
+                        // 3. Candidate & Interviewer APIs - අදාළ Role එක හෝ Admin ට අවසර ඇත
+                        .requestMatchers("/api/v1/candidate/**").hasAnyRole("CANDIDATE", "ADMIN")
+                        .requestMatchers("/api/v1/interviewer/**").hasAnyRole("INTERVIEWER", "ADMIN")
+
+                        // 4. අනෙකුත් සියලුම API calls වලට ලොග් වී සිටීම අනිවාර්යයි
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                // Filter eka add karanawa JWT eka check karanna
+                // JWT Filter එක UsernamePasswordAuthenticationFilter එකට කලින් ක්‍රියාත්මක කරනවා
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // CORS Configuration එක මෙතනට අනිවාර්යයි
+    // CORS Configuration එක React App එක (Port 5173) සමඟ වැඩ කිරීමට
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // React App URL
+        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
