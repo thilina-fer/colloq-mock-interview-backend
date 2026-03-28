@@ -53,7 +53,8 @@ public class AuthServiceImpl implements AuthService {
             throw new BadCredentialsException("Invalid credentials");
         }
 
-        String token = jwtUtil.generateToken(auth.getUsername());
+        // auth.getRole().name() පාවිච්චි කරලා Role එක String එකක් විදිහට යවමු
+        String token = jwtUtil.generateToken(auth.getUsername(), auth.getRole().name());
         return new AuthResponseDTO(token, auth.getRole().name()); // Enum to String
     }
 
@@ -116,7 +117,8 @@ public class AuthServiceImpl implements AuthService {
             }
 
             authRepo.save(auth);
-            String token = jwtUtil.generateToken(auth.getUsername());
+            // auth.getRole().name() පාවිච්චි කරලා Role එක String එකක් විදිහට යවමු
+            String token = jwtUtil.generateToken(auth.getUsername(), auth.getRole().name());
             return new AuthResponseDTO(token, auth.getRole().name());
 
         } catch (Exception e) {
