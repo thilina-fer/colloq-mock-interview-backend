@@ -312,34 +312,62 @@ public class InterviewerServiceImpl implements InterviewerService {
                 .collect(Collectors.toList());
     }
 
-    // Helper method for DTO Mapping
     private InterviewerResponseDTO mapToDTO(Interviewer interviewer) {
-        return new InterviewerResponseDTO(
-                interviewer.getInterviewerId(), // 1
-                interviewer.getAuth().getUsername(), // 2
-                interviewer.getAuth().getEmail(), // 3
-                interviewer.getBio(), // 4
-                interviewer.getCompany(), // 5
-                interviewer.getDesignation(), // 6
-                interviewer.getExperienceYears(), // 7
-                interviewer.getSpecialization(), // 8
-                interviewer.getGithubUrl(), // 9
-                interviewer.getLinkedinUrl(), // 10
-                interviewer.getProfilePicture(), // 11
-                interviewer.getStatus(),// 12
-                interviewer.getJoinSDate()
-        );
+        InterviewerResponseDTO dto = new InterviewerResponseDTO();
+
+        dto.setInterviewerId(interviewer.getInterviewerId());
+
+        // Auth Check
+        if (interviewer.getAuth() != null) {
+            dto.setUsername(interviewer.getAuth().getUsername());
+            dto.setEmail(interviewer.getAuth().getEmail());
+        } else {
+            dto.setUsername("N/A");
+            dto.setEmail("N/A");
+        }
+
+        dto.setBio(interviewer.getBio() != null ? interviewer.getBio() : "");
+        dto.setCompany(interviewer.getCompany() != null ? interviewer.getCompany() : "");
+        dto.setDesignation(interviewer.getDesignation() != null ? interviewer.getDesignation() : "");
+
+        // 💡 Integer Handle
+        dto.setExperienceYears(interviewer.getExperienceYears() != null ? interviewer.getExperienceYears() : 0);
+
+        dto.setSpecialization(interviewer.getSpecialization() != null ? interviewer.getSpecialization() : "");
+        dto.setGithubUrl(interviewer.getGithubUrl() != null ? interviewer.getGithubUrl() : "");
+        dto.setLinkedinUrl(interviewer.getLinkedinUrl() != null ? interviewer.getLinkedinUrl() : "");
+        dto.setProfilePicture(interviewer.getProfilePicture() != null ? interviewer.getProfilePicture() : "");
+        dto.setStatus(interviewer.getStatus() != null ? interviewer.getStatus() : "PENDING");
+
+        // 💡 joinSDate එක Date එකක් නම් String එකකට convert කරන්න
+        if (interviewer.getJoinSDate() != null) {
+            dto.setJoinSDate(interviewer.getJoinSDate().toString());
+        } else {
+            dto.setJoinSDate("");
+        }
+
+        return dto;
     }
 
     @Override
     public List<InterviewerResponseDTO> getPendingInterviewers() {
-        // 1. Status එක PENDING අයව විතරක් Filter කරලා ගන්න
-        return interviewerRepo.findAll()
-                .stream()
-                .filter(i -> "PENDING".equalsIgnoreCase(i.getStatus()))
-                .map(this::mapToDTO) // 💡 මෙන්න මෙතන තමයි වැරැද්ද වෙන්නේ
+        System.out.println("DEBUG: Method started..."); // මේක වැටෙන්නම ඕනේ
+
+        List<Interviewer> all = interviewerRepo.findAll();
+        System.out.println("DEBUG: Total interviewers found in DB: " + all.size());
+
+        // 💡 මෙතනදී status එක print කරලා බලමු DB එකේ තියෙන විදිහ
+        for (Interviewer i : all) {
+            System.out.println("ID: " + i.getInterviewerId() + " | Status in DB: [" + i.getStatus() + "]");
+        }
+
+        List<Interviewer> pending = all.stream()
+                .filter(i -> i.getStatus() != null && i.getStatus().trim().equalsIgnoreCase("PENDING"))
                 .collect(Collectors.toList());
 
+        System.out.println("DEBUG: Filtered Pending Count: " + pending.size());
+
+        return pending.stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
     @Override
