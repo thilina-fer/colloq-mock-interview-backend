@@ -243,10 +243,13 @@ public class InterviewerServiceImpl implements InterviewerService {
     // InterviewerServiceImpl.java
 
     @Override
-    @Transactional
+    @Transactional // 💡 අනිවාර්යයෙන්ම Transactional දාන්න Table දෙකක් Update කරන නිසා
     public String updateInterviewerProfile(CompleteInterviewerProfileDTO dto, MultipartFile imageFile, String username) {
+
         // 1. කලින් ඉන්න Auth user සහ Interviewer profile එක හොයාගන්න
+        // Username හෝ Email දෙකෙන්ම හොයන්න ඉඩ දෙමු
         Auth auth = authRepo.findByUsername(username)
+                .or(() -> authRepo.findByEmail(username))
                 .orElseThrow(() -> new RuntimeException("Auth user not found"));
 
         Interviewer interviewer = interviewerRepo.findByAuth(auth)
@@ -266,15 +269,32 @@ public class InterviewerServiceImpl implements InterviewerService {
             if (imageFile != null && !imageFile.isEmpty()) {
                 Map uploadResult = cloudinary.uploader().upload(imageFile.getBytes(),
                         ObjectUtils.asMap("folder", "colloq_profiles/interviewers"));
-                interviewer.setProfilePicture(uploadResult.get("url").toString());
+
+                String imageUrl = uploadResult.get("url").toString();
+
+                // ✅ Interviewer Table එක Update කිරීම
+                interviewer.setProfilePicture(imageUrl);
+
+                // ✅ Auth Table එක Update කිරීම (Header එකේ පේන්න)
+                auth.setProfilePic(imageUrl);
+
+            } else if (dto.getProfilePicture() != null) {
+                // Image එකක් එවලා නැත්නම්, DTO එකේ තියෙන URL එකම තියාගන්න
+                interviewer.setProfilePicture(dto.getProfilePicture());
+                auth.setProfilePic(dto.getProfilePicture());
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to update profile picture: " + e.getMessage());
         }
 
+        // 4. දෙකම Save කිරීම
         interviewerRepo.save(interviewer);
+        authRepo.save(auth);
+
         return "Interviewer profile updated successfully";
     }
+
+
     @Override
     public String deleteInterviewerProfile(Long interviewerId, String username) {
         Interviewer interviewer = interviewerRepo.findById(interviewerId)
