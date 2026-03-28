@@ -315,18 +315,42 @@ public class InterviewerServiceImpl implements InterviewerService {
     // Helper method for DTO Mapping
     private InterviewerResponseDTO mapToDTO(Interviewer interviewer) {
         return new InterviewerResponseDTO(
-                interviewer.getInterviewerId(),
-                interviewer.getAuth().getUsername(),
-                interviewer.getAuth().getEmail(),
-                interviewer.getBio(),
-                interviewer.getCompany(),
-                interviewer.getDesignation(),
-                interviewer.getExperienceYears(),
-                interviewer.getSpecialization(),
-                interviewer.getGithubUrl(),
-                interviewer.getLinkedinUrl(),
-                interviewer.getProfilePicture(),
-                interviewer.getStatus()
+                interviewer.getInterviewerId(), // 1
+                interviewer.getAuth().getUsername(), // 2
+                interviewer.getAuth().getEmail(), // 3
+                interviewer.getBio(), // 4
+                interviewer.getCompany(), // 5
+                interviewer.getDesignation(), // 6
+                interviewer.getExperienceYears(), // 7
+                interviewer.getSpecialization(), // 8
+                interviewer.getGithubUrl(), // 9
+                interviewer.getLinkedinUrl(), // 10
+                interviewer.getProfilePicture(), // 11
+                interviewer.getStatus(),// 12
+                interviewer.getJoinSDate()
         );
+    }
+
+    @Override
+    public List<InterviewerResponseDTO> getPendingInterviewers() {
+        // 1. Status එක PENDING අයව විතරක් Filter කරලා ගන්න
+        return interviewerRepo.findAll()
+                .stream()
+                .filter(i -> "PENDING".equalsIgnoreCase(i.getStatus()))
+                .map(this::mapToDTO) // 💡 මෙන්න මෙතන තමයි වැරැද්ද වෙන්නේ
+                .collect(Collectors.toList());
+
+    }
+
+    @Override
+    @Transactional
+    public String approveInterviewer(Long interviewerId) {
+        Interviewer interviewer = interviewerRepo.findById(interviewerId)
+                .orElseThrow(() -> new RuntimeException("Interviewer not found"));
+
+        interviewer.setStatus("ACTIVE"); // Status එක ACTIVE කරනවා
+        interviewerRepo.save(interviewer);
+
+        return "Interviewer approved successfully";
     }
 }
