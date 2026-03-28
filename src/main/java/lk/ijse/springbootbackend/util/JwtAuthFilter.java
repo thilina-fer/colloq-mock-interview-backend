@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -31,7 +32,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
 
-        // Header එකක් නැත්නම් හෝ Bearer නොවෙයි නම් ඊළඟ filter එකට යවන්න
+        // 1. Authorization Header එක පරීක්ෂා කිරීම
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -43,36 +44,43 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         try {
             username = jwtUtil.extractUsername(jwtToken);
         } catch (Exception e) {
-            // Token එක extract කරන්න බැරි නම් process එක නවත්තන්න
+            // Token එක කියවන්න බැරි නම් filter chain එක දිගටම යවන්න
             filterChain.doFilter(request, response);
             return;
         }
 
-        // දැනටමත් authenticate වෙලා නැතිනම් පමණක් ඉදිරියට යන්න
+        // 2. දැනටමත් Authenticate වෙලා නැතිනම් පමණක් ඉදිරියට යන්න
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            // Username එකෙන් හෝ Email එකෙන් User ව හොයාගන්න (Login එකට ගැලපෙන ලෙස)
-            Auth auth = authRepo.findByUsername(username)
-                    .or(() -> authRepo.findByEmail(username))
-                    .orElse(null);
+            // 💡 Token එක Validate කර බලන්න
+            if (jwtUtil.validateToken(jwtToken)) {
 
-            // Token එක validate කර බලන්න
-            if (auth != null && jwtUtil.validateToken(jwtToken)) {
+                // 💡 Token එක ඇතුළෙන්ම Role එක extract කරගන්න (මම කලින් JwtUtil එකට දුන්න method එක)
+                String role = jwtUtil.extractRole(jwtToken);
 
-                // වැදගත්ම කොටස: මෙතැනදී "ROLE_" prefix එක සමඟ Enum name එක ලබා දිය යුතුයි
-                UsernamePasswordAuthenticationToken authenticationToken =
-                        new UsernamePasswordAuthenticationToken(
-                                auth, // String එකක් වෙනුවට Auth object එකම ලබා දෙන්න
-                                null,
-                                List.of(new SimpleGrantedAuthority("ROLE_" + auth.getRole().name()))
-                        );
+                // 💡 DB එකෙන් අදාළ User ව හොයාගන්න (Principal object එක විදිහට තියාගන්න)
+                Auth auth = authRepo.findByUsername(username)
+                        .or(() -> authRepo.findByEmail(username))
+                        .orElse(null);
 
-                authenticationToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
+                if (auth != null) {
+                    // 💡 Spring Security වලට අදාළ "ROLE_" prefix එක සමඟ Authority එක හැදීම
+                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
 
-                // SecurityContext එකට Authentication එක ඇතුළත් කිරීම
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                    UsernamePasswordAuthenticationToken authenticationToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    auth, // Principal (User object)
+                                    null,
+                                    Collections.singletonList(authority) // Authorities list
+                            );
+
+                    authenticationToken.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request)
+                    );
+
+                    // 💡 අවසාන වශයෙන් Security Context එකට Authentication එක ඇතුළත් කිරීම
+                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                }
             }
         }
 
