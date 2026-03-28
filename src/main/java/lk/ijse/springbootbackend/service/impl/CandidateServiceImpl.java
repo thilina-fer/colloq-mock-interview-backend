@@ -11,6 +11,7 @@ import lk.ijse.springbootbackend.repo.CandidateRepo;
 import lk.ijse.springbootbackend.service.CandidateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -26,9 +27,12 @@ public class CandidateServiceImpl implements CandidateService {
     private final Cloudinary cloudinary; // Cloudinary eka inject kala
 
     @Override
+    @Transactional // 💡 අනිවාර්යයෙන්ම Transactional දාන්න Table දෙකක් update කරන නිසා
     public String completeCandidateProfile(CompleteCandidateProfileDTO dto, MultipartFile imageFile, String username) {
 
+        // 1. Email හෝ Username දෙකෙන්ම හොයන්න ඉඩ දෙමු
         Auth auth = authRepo.findByUsername(username)
+                .or(() -> authRepo.findByEmail(username))
                 .orElseThrow(() -> new RuntimeException("Auth user not found"));
 
         if (candidateRepo.existsByAuth(auth)) {
@@ -47,16 +51,28 @@ public class CandidateServiceImpl implements CandidateService {
         try {
             if (imageFile != null && !imageFile.isEmpty()) {
                 Map uploadResult = cloudinary.uploader().upload(imageFile.getBytes(),
-                        ObjectUtils.asMap("folder", "colloq_profiles"));
-                candidate.setProfilePicture(uploadResult.get("url").toString());
+                        ObjectUtils.asMap("folder", "colloq_profiles/candidates"));
+
+                String imageUrl = uploadResult.get("url").toString();
+
+                // ✅ Candidate table එකට URL එක දානවා
+                candidate.setProfilePicture(imageUrl);
+
+                // ✅ Auth table එකටත් URL එක අනිවාර්යයෙන්ම දාන්න (එතකොටයි Header එකේ පේන්නේ)
+                auth.setProfilePic(imageUrl);
+
             } else {
-                candidate.setProfilePicture(dto.getProfilePicture()); // default ui-avatar eka
+                candidate.setProfilePicture(dto.getProfilePicture());
+                if (dto.getProfilePicture() != null) {
+                    auth.setProfilePic(dto.getProfilePicture());
+                }
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to upload image: " + e.getMessage());
         }
 
         candidateRepo.save(candidate);
+        authRepo.save(auth); // 💡 Auth table එකත් save කරන්න අමතක කරන්න එපා
 
         return "Candidate profile completed successfully";
     }
