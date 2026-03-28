@@ -12,4 +12,6 @@ public interface InterviewerService {
     String updateInterviewerProfile(CompleteInterviewerProfileDTO dto, MultipartFile imageFile, String username);
     String deleteInterviewerProfile(Long interviewerId, String username);
     List<InterviewerResponseDTO> getAllInterviewers();
+    List<InterviewerResponseDTO> getPendingInterviewers();
+    String approveInterviewer(Long interviewerId);
 }
