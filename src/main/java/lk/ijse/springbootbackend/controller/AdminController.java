@@ -54,4 +54,13 @@ public class AdminController {
                 HttpStatus.OK
         );
     }
+
+    @DeleteMapping("/reject-interviewer/{id}")
+    public ResponseEntity<APIResponse> rejectInterviewer(@PathVariable("id") Long interviewerId) {
+        String message = interviewerService.rejectInterviewer(interviewerId);
+        return new ResponseEntity<>(
+                new APIResponse(200, message, null),
+                HttpStatus.OK
+        );
+    }
 }
