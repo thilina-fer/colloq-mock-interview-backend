@@ -5,6 +5,7 @@ import lk.ijse.springbootbackend.dto.auth.CompleteInterviewerProfileDTO;
 import lk.ijse.springbootbackend.dto.InterviewerResponseDTO;
 import lk.ijse.springbootbackend.service.InterviewerService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -80,5 +81,6 @@ public class InterviewerController {
         List<InterviewerResponseDTO> data = interviewerService.getAllInterviewers();
         return ResponseEntity.ok(new APIResponse(200, "Success", data));
     }
+
 
 }

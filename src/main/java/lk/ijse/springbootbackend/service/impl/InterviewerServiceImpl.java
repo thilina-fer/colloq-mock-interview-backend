@@ -372,13 +372,24 @@ public class InterviewerServiceImpl implements InterviewerService {
 
     @Override
     @Transactional
-    public String approveInterviewer(Long interviewerId) {
+    public InterviewerResponseDTO approveInterviewer(Long interviewerId) {
+        // 1. Interviewer ව හොයාගන්න
         Interviewer interviewer = interviewerRepo.findById(interviewerId)
-                .orElseThrow(() -> new RuntimeException("Interviewer not found"));
+                .orElseThrow(() -> new RuntimeException("Interviewer not found with ID: " + interviewerId));
 
-        interviewer.setStatus("ACTIVE"); // Status එක ACTIVE කරනවා
-        interviewerRepo.save(interviewer);
+        // 2. Interviewer status එක ACTIVE කරන්න
+        interviewer.setStatus("ACTIVE");
 
-        return "Interviewer approved successfully";
+        // 💡 3. වැදගත්ම දේ: Auth record එකත් ACTIVE කරන්න (Login වීමට අවශ්‍යයි)
+        if (interviewer.getAuth() != null) {
+            interviewer.getAuth().setStatus("ACTIVE");
+            // සාමාන්‍යයෙන් Cascade දාලා නැත්නම් මෙහෙම save කරන්න ඕනේ
+            authRepo.save(interviewer.getAuth());
+        }
+
+        Interviewer savedInterviewer = interviewerRepo.save(interviewer);
+
+        // 4. Update වුණු දත්ත DTO එකක් ලෙස ආපහු යවන්න
+        return mapToDTO(savedInterviewer);
     }
 }

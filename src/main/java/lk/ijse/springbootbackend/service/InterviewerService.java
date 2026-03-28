@@ -13,5 +13,5 @@ public interface InterviewerService {
     String deleteInterviewerProfile(Long interviewerId, String username);
     List<InterviewerResponseDTO> getAllInterviewers();
     List<InterviewerResponseDTO> getPendingInterviewers();
-    String approveInterviewer(Long interviewerId);
+    InterviewerResponseDTO approveInterviewer(Long interviewerId);
 }

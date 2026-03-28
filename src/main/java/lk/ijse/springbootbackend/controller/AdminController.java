@@ -1,10 +1,12 @@
 package lk.ijse.springbootbackend.controller;
 
 import lk.ijse.springbootbackend.dto.APIResponse;
+import lk.ijse.springbootbackend.dto.InterviewerResponseDTO;
 import lk.ijse.springbootbackend.dto.auth.RegisterDTO;
 import lk.ijse.springbootbackend.service.AuthService;
 import lk.ijse.springbootbackend.service.InterviewerService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -42,8 +44,14 @@ public class AdminController {
     // AdminController.java
 
     @PutMapping("/approve-interviewer/{id}")
-    public ResponseEntity<APIResponse> approve(@PathVariable("interviewer id") Long id) { // 💡 මෙතන ("id") අනිවාර්යයි
-        String result = interviewerService.approveInterviewer(id);
-        return ResponseEntity.ok(new APIResponse(200, "Success", result));
+    public ResponseEntity<APIResponse> approveInterviewer(@PathVariable("id") Long interviewerId) {
+        // 💡 @PathVariable("id") මගින් URL එකේ තියෙන {id} කෑල්ල interviewerId එකට සම්බන්ධ කරනවා
+
+        InterviewerResponseDTO approvedDto = interviewerService.approveInterviewer(interviewerId);
+
+        return new ResponseEntity<>(
+                new APIResponse(200, "Interviewer Approved Successfully", approvedDto),
+                HttpStatus.OK
+        );
     }
 }
