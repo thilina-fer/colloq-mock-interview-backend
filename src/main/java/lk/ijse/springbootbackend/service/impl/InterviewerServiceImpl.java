@@ -201,7 +201,7 @@ public class InterviewerServiceImpl implements InterviewerService {
         interviewer.setSpecialization(dto.getSpecialization());
         interviewer.setGithubUrl(dto.getGithubUrl());
         interviewer.setLinkedinUrl(dto.getLinkedinUrl());
-        interviewer.setStatus("PENDING");
+        interviewer.setStatus(dto.getStatus());
 
         try {
             if (imageFile != null && !imageFile.isEmpty()) {

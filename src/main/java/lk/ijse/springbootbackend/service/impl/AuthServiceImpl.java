@@ -128,19 +128,21 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthMeDTO getCurrentUser(String username) {
-        // identifier එක email එකක් නම් findByEmail පාවිච්චි කරන්න (අපි කලින් කතා කරපු විදිහට)
         Auth auth = authRepo.findByUsername(username)
                 .or(() -> authRepo.findByEmail(username))
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         AuthMeDTO dto = new AuthMeDTO();
-        dto.setAuthId(auth.getAuthId()); // ID එකත් දාන්න
+        dto.setAuthId(auth.getAuthId());
         dto.setUsername(auth.getUsername());
         dto.setEmail(auth.getEmail());
         dto.setRole(auth.getRole().name());
+
+        // 💡 මුලින්ම Auth එකේ තියෙන status එක දාමු (Candidates ලාට මේක වැඩ කරයි)
         dto.setStatus(auth.getStatus());
+
         dto.setProfileUpdated(auth.isProfileUpdated());
-        dto.setProfilePic(auth.getProfilePic()); // Profile picture එකත් අමතක කරන්න එපා
+        dto.setProfilePic(auth.getProfilePic());
 
         if (Role.CANDIDATE.equals(auth.getRole())) {
             candidateRepo.findByAuth(auth).ifPresent(c -> {
@@ -150,15 +152,15 @@ public class AuthServiceImpl implements AuthService {
             });
         } else if (Role.INTERVIEWER.equals(auth.getRole())) {
             interviewerRepo.findByAuth(auth).ifPresent(i -> {
+                // ✅ වැදගත්ම දේ: Interviewer කෙනෙක් නම්, Auth status එක වෙනුවට
+                // Interviewer table එකේ තියෙන ඇත්තම status එක (PENDING/ACTIVE) DTO එකට දාන්න.
+                dto.setStatus(i.getStatus());
+
                 dto.setBio(i.getBio());
                 dto.setSpecialization(i.getSpecialization());
                 dto.setCompany(i.getCompany());
-
-                // ✅ අලුතින් එකතු කළ යුතු පේළි:
                 dto.setDesignation(i.getDesignation());
                 dto.setExperienceYears(i.getExperienceYears());
-
-                // සමාජ මාධ්‍ය ලින්ක් තිබේ නම් ඒවාත් දාන්න
                 dto.setGithubUrl(i.getGithubUrl());
                 dto.setLinkedinUrl(i.getLinkedinUrl());
             });

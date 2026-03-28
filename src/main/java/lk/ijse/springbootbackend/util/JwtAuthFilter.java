@@ -17,7 +17,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -32,7 +31,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
 
-        // 1. Authorization Header එක පරීක්ෂා කිරීම
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -44,43 +42,41 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         try {
             username = jwtUtil.extractUsername(jwtToken);
         } catch (Exception e) {
-            // Token එක කියවන්න බැරි නම් filter chain එක දිගටම යවන්න
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 2. දැනටමත් Authenticate වෙලා නැතිනම් පමණක් ඉදිරියට යන්න
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            // 💡 Token එක Validate කර බලන්න
             if (jwtUtil.validateToken(jwtToken)) {
 
-                // 💡 Token එක ඇතුළෙන්ම Role එක extract කරගන්න (මම කලින් JwtUtil එකට දුන්න method එක)
                 String role = jwtUtil.extractRole(jwtToken);
 
-                // 💡 DB එකෙන් අදාළ User ව හොයාගන්න (Principal object එක විදිහට තියාගන්න)
                 Auth auth = authRepo.findByUsername(username)
                         .or(() -> authRepo.findByEmail(username))
                         .orElse(null);
 
-                if (auth != null) {
-                    // 💡 Spring Security වලට අදාළ "ROLE_" prefix එක සමඟ Authority එක හැදීම
+                // 💡 වෙනස් කළ යුතු තැන:
+                // User කෙනෙක් ඉන්නවා නම් සහ එයාගේ status එක "ACTIVE" නම් පමණක් Authentication එක දෙන්න.
+                if (auth != null && "ACTIVE".equals(auth.getStatus())) {
+
                     SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
 
                     UsernamePasswordAuthenticationToken authenticationToken =
                             new UsernamePasswordAuthenticationToken(
-                                    auth, // Principal (User object)
+                                    auth,
                                     null,
-                                    Collections.singletonList(authority) // Authorities list
+                                    Collections.singletonList(authority)
                             );
 
                     authenticationToken.setDetails(
                             new WebAuthenticationDetailsSource().buildDetails(request)
                     );
 
-                    // 💡 අවසාන වශයෙන් Security Context එකට Authentication එක ඇතුළත් කිරීම
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                 }
+                // 💡 විකල්පයක් ලෙස: Status එක ACTIVE නැතිනම් මෙතනදී කෙලින්ම 403 error එකක් යවන්නත් පුළුවන්.
+                // එතකොට API එකට යන්න කලින්ම Filter එකෙන් block වෙනවා.
             }
         }
 
