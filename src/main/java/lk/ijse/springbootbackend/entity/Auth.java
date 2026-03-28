@@ -84,15 +84,7 @@ public class Auth implements UserDetails {
      * Spring Security විසින් User ව හඳුනාගන්නා අනන්‍ය නාමය (Identifier).
      * අපි මෙතැනදී Email එක භාවිතා කරමු.
      */
-    @Override
-    public String getUsername() {
-        return email;
-    }
 
-    @Override
-    public String getPassword() {
-        return password;
-    }
 
     // ගිණුමේ තත්ත්වය පරීක්ෂා කරන Methods (සාමාන්‍යයෙන් true ලෙස තබයි)
     @Override

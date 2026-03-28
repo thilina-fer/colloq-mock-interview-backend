@@ -30,6 +30,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class AuthMeDTO {
+    private Long authId;
     // === Common Fields (Dennatama podu ewa) ===
     private String username;
     private String email;

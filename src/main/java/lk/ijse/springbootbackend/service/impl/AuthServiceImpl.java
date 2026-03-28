@@ -126,17 +126,20 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthMeDTO getCurrentUser(String username) {
+        // identifier එක email එකක් නම් findByEmail පාවිච්චි කරන්න (අපි කලින් කතා කරපු විදිහට)
         Auth auth = authRepo.findByUsername(username)
+                .or(() -> authRepo.findByEmail(username))
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         AuthMeDTO dto = new AuthMeDTO();
+        dto.setAuthId(auth.getAuthId()); // ID එකත් දාන්න
         dto.setUsername(auth.getUsername());
         dto.setEmail(auth.getEmail());
-        dto.setRole(auth.getRole().name()); // Enum name as String
+        dto.setRole(auth.getRole().name());
         dto.setStatus(auth.getStatus());
         dto.setProfileUpdated(auth.isProfileUpdated());
+        dto.setProfilePic(auth.getProfilePic()); // Profile picture එකත් අමතක කරන්න එපා
 
-        // Role එක අනුව අමතර දත්ත ලබාගැනීම
         if (Role.CANDIDATE.equals(auth.getRole())) {
             candidateRepo.findByAuth(auth).ifPresent(c -> {
                 dto.setBio(c.getBio());
@@ -148,6 +151,14 @@ public class AuthServiceImpl implements AuthService {
                 dto.setBio(i.getBio());
                 dto.setSpecialization(i.getSpecialization());
                 dto.setCompany(i.getCompany());
+
+                // ✅ අලුතින් එකතු කළ යුතු පේළි:
+                dto.setDesignation(i.getDesignation());
+                dto.setExperienceYears(i.getExperienceYears());
+
+                // සමාජ මාධ්‍ය ලින්ක් තිබේ නම් ඒවාත් දාන්න
+                dto.setGithubUrl(i.getGithubUrl());
+                dto.setLinkedinUrl(i.getLinkedinUrl());
             });
         }
         return dto;
