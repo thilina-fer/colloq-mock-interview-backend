@@ -184,8 +184,8 @@ public class InterviewerServiceImpl implements InterviewerService {
     @Override
     @Transactional
     public String completeInterviewerProfile(CompleteInterviewerProfileDTO dto, MultipartFile imageFile, String username) {
-
         Auth auth = authRepo.findByUsername(username)
+                .or(() -> authRepo.findByEmail(username))
                 .orElseThrow(() -> new RuntimeException("Auth user not found"));
 
         if (interviewerRepo.existsByAuth(auth)) {
@@ -201,25 +201,33 @@ public class InterviewerServiceImpl implements InterviewerService {
         interviewer.setSpecialization(dto.getSpecialization());
         interviewer.setGithubUrl(dto.getGithubUrl());
         interviewer.setLinkedinUrl(dto.getLinkedinUrl());
-        interviewer.setStatus("PENDING"); // Verification නිසා pending දාමු
+        interviewer.setStatus("PENDING");
 
-        // Cloudinary Image Upload Logic
         try {
             if (imageFile != null && !imageFile.isEmpty()) {
                 Map uploadResult = cloudinary.uploader().upload(imageFile.getBytes(),
                         ObjectUtils.asMap("folder", "colloq_profiles/interviewers"));
-                interviewer.setProfilePicture(uploadResult.get("url").toString());
+
+                String imageUrl = uploadResult.get("url").toString();
+                interviewer.setProfilePicture(imageUrl);
+                auth.setProfilePic(imageUrl);
+
             } else {
-                interviewer.setProfilePicture(dto.getProfilePicture()); // default ui-avatar URL එක
+                interviewer.setProfilePicture(dto.getProfilePicture());
+                if (dto.getProfilePicture() != null) {
+                    auth.setProfilePic(dto.getProfilePicture());
+                }
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to upload image: " + e.getMessage());
         }
 
         interviewerRepo.save(interviewer);
+        authRepo.save(auth);
 
         return "Interviewer profile completed successfully";
     }
+
 
     @Override
     public InterviewerResponseDTO getInterviewerProfile(String username) {
