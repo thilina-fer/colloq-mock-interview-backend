@@ -17,7 +17,7 @@ public class InterviewerResponseDTO {
     private String bio;
     private String company;
     private String designation;
-    private int experienceYears;
+    private Integer experienceYears; // 💡 'int' වෙනුවට 'Integer' (Capital I)
     private String specialization;
     private String githubUrl;
     private String linkedinUrl;
