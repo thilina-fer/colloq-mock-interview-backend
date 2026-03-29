@@ -52,14 +52,31 @@ public class LevelServiceImpl implements LevelService {
         return "Level updated successfully";
     }
 
-    // අනිත් getAllLevels, deleteLevel කලින් විදිහමයි (ඒවා අවුලක් නැහැ)
     @Override
     public List<LevelDTO> getAllLevels() {
+        System.out.println("--- [DEBUG] getAllLevels started ---");
 
-        return levelRepo.findAll()
-                .stream()
-                .map(level -> modelMapper.map(level, LevelDTO.class))
-                .collect(Collectors.toList());
+        List<Level> levels = levelRepo.findAll();
+
+        // 1. DB එකෙන් දත්ත ආවාද කියලා බලමු
+        System.out.println("--- [DEBUG] DB levels count: " + levels.size());
+
+        if (levels.isEmpty()) {
+            System.out.println("--- [DEBUG] Warning: No levels found in Database! ---");
+        }
+
+        List<LevelDTO> dtos = levels.stream().map(level -> {
+            // 2. එකින් එක Entity එකේ දත්ත print කරලා බලමු
+            System.out.println("--- [DEBUG] Mapping Level: ID=" + level.getLevelId() + ", Name=" + level.getName());
+
+            LevelDTO dto = new LevelDTO();
+            dto.setLevelId(level.getLevelId());
+            dto.setName(level.getName());
+            return dto;
+        }).collect(Collectors.toList());
+
+        System.out.println("--- [DEBUG] Mapping completed. Returning " + dtos.size() + " DTOs ---");
+        return dtos;
     }
 
     @Override

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/level")
+@RequestMapping("/api/v1/levels")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:5173")
 public class LevelController {
@@ -29,12 +29,14 @@ public class LevelController {
         );
     }
 
-    // 🚀 Get All Levels
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<APIResponse> getAllLevels() {
+        // 💡 මෙතන sout එකක් දාලා බලන්න API එකට request එක එනවද කියලා
+        System.out.println("--- Request received at LevelController ---");
+
         List<LevelDTO> allLevels = levelService.getAllLevels();
         return new ResponseEntity<>(
-                new APIResponse(200, "Levels fetched successfully", allLevels),
+                new APIResponse(200, "Success", allLevels),
                 HttpStatus.OK
         );
     }
