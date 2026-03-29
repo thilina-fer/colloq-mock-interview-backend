@@ -11,7 +11,12 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,38 +29,75 @@ public class InterviewerAvailabilityImpl implements InterviewerAvailabilityServi
     private final ModelMapper modelMapper;
 
     @Override
-    public String saveAvailability(InterviewerAvailabilityDTO dto) {
-        Interviewer interviewer = interviewerRepo.findById(dto.getInterviewerId())
+    @Transactional
+    public String saveAvailabilityBatch(List<InterviewerAvailabilityDTO> dtos) {
+        if (dtos.isEmpty()) return "No slots to save";
+
+        // 1. Interviewer ඉන්නවාද කියලා බලනවා (පළමු DTO එකේ ID එකෙන්)
+        Interviewer interviewer = interviewerRepo.findById(dtos.get(0).getInterviewerId())
                 .orElseThrow(() -> new RuntimeException("Interviewer not found"));
 
-        // 2. Map and Save
-        InterviewerAvailability availability = modelMapper.map(dto, InterviewerAvailability.class);
-        availability.setInterviewer(interviewer);
-        availability.setBooked(false); // Default false
+        // 2. Frontend එකෙන් එන "09:00 AM" format එකට ගැලපෙන Formatter එක
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH);
 
-        availabilityRepo.save(availability);
-        return "Availability slot saved successfully";
+        try {
+            List<InterviewerAvailability> entities = dtos.stream().map(dto -> {
+                InterviewerAvailability availability = new InterviewerAvailability();
+
+                // 💡 String -> LocalDate (Standard "YYYY-MM-DD" format)
+                availability.setDate(LocalDate.parse(dto.getDate()));
+
+                // 💡 String -> LocalTime ("09:00 AM" -> LocalTime object)
+                availability.setStartTime(LocalTime.parse(dto.getStartTime(), timeFormatter));
+                availability.setEndTime(LocalTime.parse(dto.getEndTime(), timeFormatter));
+
+                availability.setInterviewer(interviewer);
+                availability.setBooked(false); // අලුත් ඒව හැමතිස්සෙම Available
+
+                return availability;
+            }).collect(Collectors.toList());
+
+            availabilityRepo.saveAll(entities);
+            return "Batch availability saved successfully!";
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error saving slots: " + e.getMessage());
+        }
     }
 
     @Override
     public List<InterviewerAvailabilityDTO> getAllAvailabilities() {
-        return availabilityRepo.findAll().stream()
-                .map(s -> modelMapper.map(s, InterviewerAvailabilityDTO.class))
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH);
+        Long currentInterviewerId = 1L;
+
+        return availabilityRepo.findByInterviewer_InterviewerId(currentInterviewerId).stream()
+                .map(s -> {
+                    InterviewerAvailabilityDTO dto = new InterviewerAvailabilityDTO();
+                    dto.setAvailabilityId(s.getAvailabilityId());
+
+                    // ✅ Entity (LocalDate) -> DTO (String) බවට හරවනවා
+                    if (s.getDate() != null) {
+                        dto.setDate(s.getDate().toString());
+                    }
+
+                    // ✅ Entity (LocalTime) -> DTO (String) බවට හරවනවා
+                    if (s.getStartTime() != null) {
+                        dto.setStartTime(s.getStartTime().format(timeFormatter));
+                    }
+
+                    if (s.getEndTime() != null) {
+                        dto.setEndTime(s.getEndTime().format(timeFormatter));
+                    }
+
+                    dto.setBooked(s.isBooked());
+
+                    if (s.getInterviewer() != null) {
+                        dto.setInterviewerId(s.getInterviewer().getInterviewerId());
+                    }
+
+                    return dto;
+                })
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    public String updateAvailability(Long id, InterviewerAvailabilityDTO dto) {
-        InterviewerAvailability existing = availabilityRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Slot not found"));
-
-
-        existing.setDate(dto.getDate());
-        existing.setStartTime(dto.getStartTime());
-        existing.setEndTime(dto.getEndTime());
-
-        availabilityRepo.save(existing);
-        return "Slot updated successfully";
     }
 
     @Override
