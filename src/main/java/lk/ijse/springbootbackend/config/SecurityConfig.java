@@ -32,8 +32,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
-
-                        // 💡 මේ පේළිය අනිවාර්යයෙන්ම තියෙන්න ඕනේ
+                        .requestMatchers("/api/v1/levels/**").authenticated()
+                        .requestMatchers("/api/v1/interviewers/**").authenticated()
                         .requestMatchers("/api/v1/availability/**").hasAnyRole("INTERVIEWER", "ADMIN")
 
                         .requestMatchers("/api/v1/level/**").hasRole("ADMIN")
