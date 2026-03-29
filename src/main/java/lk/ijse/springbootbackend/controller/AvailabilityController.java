@@ -16,19 +16,14 @@ public class AvailabilityController {
 
     private final InterviewerAvailabilityService availabilityService;
 
-    @PostMapping("/save")
-    public ResponseEntity<String> save(@RequestBody InterviewerAvailabilityDTO dto) {
-        return ResponseEntity.ok(availabilityService.saveAvailability(dto));
+    @PostMapping("/batch-save")
+    public ResponseEntity<String> saveBatch(@RequestBody List<InterviewerAvailabilityDTO> dtos) {
+        return ResponseEntity.ok(availabilityService.saveAvailabilityBatch(dtos));
     }
 
     @GetMapping("/get-all")
     public ResponseEntity<List<InterviewerAvailabilityDTO>> getAll() {
         return ResponseEntity.ok(availabilityService.getAllAvailabilities());
-    }
-
-    @PutMapping("/update/{id}")
-    public ResponseEntity<String> update(@PathVariable Long id, @RequestBody InterviewerAvailabilityDTO dto) {
-        return ResponseEntity.ok(availabilityService.updateAvailability(id, dto));
     }
 
     @DeleteMapping("/delete/{id}")
