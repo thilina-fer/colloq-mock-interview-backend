@@ -8,4 +8,5 @@ import java.util.List;
 @Repository
 public interface InterviewerAvailabilityRepo extends JpaRepository<InterviewerAvailability, Long> {
     List<InterviewerAvailability> findByInterviewer_InterviewerId(Long interviewerId);
+    boolean existsById(Long id);
 }
