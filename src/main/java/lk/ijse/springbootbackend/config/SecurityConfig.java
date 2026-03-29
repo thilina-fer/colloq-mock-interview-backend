@@ -27,28 +27,25 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
         http
-                .cors(Customizer.withDefaults()) // CORS enable කිරීම
+                .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        // 1. Auth API (Login, Register) - No Token Needed
                         .requestMatchers("/api/v1/auth/**").permitAll()
 
-                        // 2. Admin APIs - ADMIN ලට විතරයි අවසර දෙන්නේ
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        // 💡 මේ පේළිය අනිවාර්යයෙන්ම තියෙන්න ඕනේ
+                        .requestMatchers("/api/v1/availability/**").hasAnyRole("INTERVIEWER", "ADMIN")
 
-                        // 3. Candidate & Interviewer APIs - අදාළ Role එක හෝ Admin ට අවසර ඇත
+                        .requestMatchers("/api/v1/level/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/candidate/**").hasAnyRole("CANDIDATE", "ADMIN")
                         .requestMatchers("/api/v1/interviewer/**").hasAnyRole("INTERVIEWER", "ADMIN")
 
-                        // 4. අනෙකුත් සියලුම API calls වලට ලොග් වී සිටීම අනිවාර්යයි
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                // JWT Filter එක UsernamePasswordAuthenticationFilter එකට කලින් ක්‍රියාත්මක කරනවා
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
