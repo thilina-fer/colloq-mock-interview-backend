@@ -3,6 +3,7 @@ package lk.ijse.springbootbackend.controller;
 import lk.ijse.springbootbackend.dto.InterviewerAvailabilityDTO;
 import lk.ijse.springbootbackend.service.InterviewerAvailabilityService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +28,12 @@ public class AvailabilityController {
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> delete(@PathVariable Long id) {
-        return ResponseEntity.ok(availabilityService.deleteAvailability(id));
+    public ResponseEntity<String> deleteAvailability(@PathVariable("id") Long id) { // 💡 මෙතන ("id") එකතු කරන්න
+        try {
+            String message = availabilityService.deleteAvailability(id);
+            return ResponseEntity.ok(message);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 }
