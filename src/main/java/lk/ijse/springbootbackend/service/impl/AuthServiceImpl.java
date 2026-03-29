@@ -22,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -58,30 +59,63 @@ public class AuthServiceImpl implements AuthService {
         return new AuthResponseDTO(token, auth.getRole().name()); // Enum to String
     }
 
+//    @Override
+//    @Transactional
+//    public String register(RegisterDTO registerDTO) {
+//        if (authRepo.existsByUsername(registerDTO.getUsername())) {
+//            throw new RuntimeException("Username already exists");
+//        }
+//        if (authRepo.existsByEmail(registerDTO.getEmail())) {
+//            throw new RuntimeException("Email already exists");
+//        }
+//
+//        Auth auth = Auth.builder()
+//                .username(registerDTO.getUsername())
+//                .password(passwordEncoder.encode(registerDTO.getPassword()))
+//                .email(registerDTO.getEmail())
+//                .role(registerDTO.getRole()) // Enum භාවිතා වේ
+//                .status("ACTIVE")
+//                .emailVerified(false)
+//                .profileUpdated(false)
+//                .build();
+//
+//        authRepo.save(auth);
+//        return "User registered successfully";
+//    }
+
     @Override
     @Transactional
     public String register(RegisterDTO registerDTO) {
-        if (authRepo.existsByUsername(registerDTO.getUsername())) {
-            throw new RuntimeException("Username already exists");
-        }
-        if (authRepo.existsByEmail(registerDTO.getEmail())) {
-            throw new RuntimeException("Email already exists");
-        }
-
+        // 1. මුලින්ම Auth record එක හදනවා
         Auth auth = Auth.builder()
                 .username(registerDTO.getUsername())
                 .password(passwordEncoder.encode(registerDTO.getPassword()))
                 .email(registerDTO.getEmail())
-                .role(registerDTO.getRole()) // Enum භාවිතා වේ
+                .role(registerDTO.getRole())
                 .status("ACTIVE")
                 .emailVerified(false)
                 .profileUpdated(false)
                 .build();
 
-        authRepo.save(auth);
+        Auth savedAuth = authRepo.save(auth);
+
+        // 2. Role එක CANDIDATE නම්, Candidate table එකට default values දානවා
+        if (savedAuth.getRole() == Role.CANDIDATE) {
+            Candidate candidate = new Candidate();
+            candidate.setAuth(savedAuth);
+
+            // 💡 RegisterDTO එකේ මේ දත්ත නැති නිසා අපි Default values දානවා
+            candidate.setBio("Professional Candidate at ColloQ");
+            candidate.setGithubUrl("https://github.com/placeholder");
+            candidate.setLinkedinUrl("https://linkedin.com/in/placeholder");
+            candidate.setJoinDate(String.valueOf(LocalDate.now()));
+            candidate.setStatus("ACTIVE");
+
+            candidateRepo.save(candidate);
+        }
+
         return "User registered successfully";
     }
-
     @Override
     @Transactional
     public AuthResponseDTO authenticateWithGoogle(GoogleAuthDTO googleAuthDTO) {
