@@ -101,11 +101,18 @@ public class InterviewerAvailabilityImpl implements InterviewerAvailabilityServi
     }
 
     @Override
+    @Transactional
     public String deleteAvailability(Long id) {
-        if (!availabilityRepo.existsById(id)) {
-            throw new RuntimeException("Slot not found");
+        // 1. Slot එක තියෙනවාද බලනවා
+        InterviewerAvailability availability = availabilityRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Slot not found with ID: " + id));
+
+        // 2. 💡 වැදගත්: Book කරපු slot එකක් delete කරන්න දෙන්න එපා
+        if (availability.isBooked()) {
+            throw new RuntimeException("Cannot delete! This slot is already booked by a candidate.");
         }
-        availabilityRepo.deleteById(id);
-        return "Slot deleted successfully";
+
+        availabilityRepo.delete(availability);
+        return "Availability slot deleted successfully!";
     }
 }
