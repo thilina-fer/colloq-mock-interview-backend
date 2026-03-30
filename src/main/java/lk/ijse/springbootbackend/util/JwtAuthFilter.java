@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lk.ijse.springbootbackend.entity.Auth;
 import lk.ijse.springbootbackend.repo.AuthRepo;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,7 +19,6 @@ import java.util.Collections;
 
 @Component
 @RequiredArgsConstructor
-@Slf4j // 💡 Logging පාවිච්චි කිරීම ලෙඩ අල්ලන්න ලේසියි
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
@@ -33,57 +31,69 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
 
-        // 1. Header එකක් නැත්නම් හෝ Bearer නොවෙයි නම්, ඊළඟ filter එකට යවන්න (permitAny endpoints සඳහා)
+        // 1. Authorization Header එක පරීක්ෂා කිරීම
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
+        final String jwtToken = authHeader.substring(7);
+        final String username;
+
         try {
-            final String jwtToken = authHeader.substring(7);
-            final String username = jwtUtil.extractUsername(jwtToken);
-
-            // 2. Username එක තියෙනවා නම් සහ දැනටමත් Authenticate වෙලා නැත්නම් පමණක් ඇතුළට යන්න
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-
-                if (jwtUtil.validateToken(jwtToken)) {
-
-                    String role = jwtUtil.extractRole(jwtToken);
-
-                    // 💡 Username හෝ Email එකෙන් User ව හොයමු
-                    Auth auth = authRepo.findByUsername(username)
-                            .or(() -> authRepo.findByEmail(username))
-                            .orElse(null);
-
-                    // 3. User ඉන්නවා නම්, Role එක තියෙනවා නම් සහ Status එක ACTIVE නම් පමණක් Auth එක දෙන්න
-                    if (auth != null && role != null && "ACTIVE".equalsIgnoreCase(String.valueOf(auth.getStatus()))) {
-
-                        SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
-
-                        UsernamePasswordAuthenticationToken authenticationToken =
-                                new UsernamePasswordAuthenticationToken(
-                                        auth,
-                                        null,
-                                        Collections.singletonList(authority)
-                                );
-
-                        authenticationToken.setDetails(
-                                new WebAuthenticationDetailsSource().buildDetails(request)
-                        );
-
-                        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                        log.info("User {} authenticated with role {}", username, role);
-                    } else {
-                        log.warn("Authentication failed for user: {}. Status might not be ACTIVE or Role is null.", username);
-                    }
-                }
-            }
+            username = jwtUtil.extractUsername(jwtToken);
+            System.out.println("--- [FILTER DEBUG] ---");
+            System.out.println("Step 1: Extracted Username: " + username);
         } catch (Exception e) {
-            // 💡 මොකක් හරි Error එකක් වුණොත් Server එක Crash වෙන්න නොදී Log එකක් දාන්න
-            log.error("JWT Authentication Error: {}", e.getMessage());
+            System.out.println("ERROR: Could not extract username: " + e.getMessage());
+            filterChain.doFilter(request, response);
+            return;
         }
 
-        // 4. හැම වෙලාවකම Filter Chain එක ඉදිරියට ගෙන යාම අනිවාර්යයි
+        // 2. දැනටමත් Authenticate වෙලා නැතිනම් පමණක් ඉදිරියට යන්න
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+            if (jwtUtil.validateToken(jwtToken)) {
+                System.out.println("Step 2: Token Validation: true");
+
+                // 💡 Role එක Extract කරගැනීම
+                String role = jwtUtil.extractRole(jwtToken);
+                System.out.println("Step 3: Role from Token: [" + role + "]");
+
+                // 💡 DB එකෙන් User ව හොයාගැනීම
+                Auth auth = authRepo.findByUsername(username)
+                        .or(() -> authRepo.findByEmail(username))
+                        .orElse(null);
+
+                if (auth != null) {
+                    // ✅ "ROLE_" prefix එක අයින් කළා.
+                    // දැන් කෙලින්ම "CANDIDATE" හෝ "ADMIN" විදිහට Authority එක හැදෙනවා.
+                    String finalAuthority = role;
+                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority(finalAuthority);
+
+                    System.out.println("Step 4: Setting Authority: " + authority.getAuthority());
+                    System.out.println("Step 5: User found in DB: " + auth.getUsername());
+
+                    UsernamePasswordAuthenticationToken authenticationToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    auth,
+                                    null,
+                                    Collections.singletonList(authority)
+                            );
+
+                    authenticationToken.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request)
+                    );
+
+                    // 💡 Security Context එකට අවසන් අවසරය ලබාදීම
+                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                    System.out.println("Step 6: Security Context Updated Successfully ✅");
+                } else {
+                    System.out.println("ERROR: User not found in DB!");
+                }
+            }
+        }
+
         filterChain.doFilter(request, response);
     }
 }

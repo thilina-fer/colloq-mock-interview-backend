@@ -31,16 +31,25 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        // 1. Public Endpoints (ලොගින් සහ සයින්අප්)
                         .requestMatchers("/api/v1/auth/**").permitAll()
+
+                        // 2. Levels Endpoints
                         .requestMatchers("/api/v1/levels/**").authenticated()
-                        .requestMatchers("/api/v1/interviewers/**").authenticated()
-                        .requestMatchers("/api/v1/availability/**").hasAnyRole("INTERVIEWER", "ADMIN")
+                        .requestMatchers("/api/v1/level/**").hasAuthority("ADMIN")
 
-                        .requestMatchers("/api/v1/level/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/candidate/**").hasAnyRole("CANDIDATE", "ADMIN")
-                        .requestMatchers("/api/v1/interviewer/**").hasAnyRole("INTERVIEWER", "ADMIN")
+                        // 3. Interviewer Endpoints 🚀
+                        // /all එකට CANDIDATE ටත් අවසර දිය යුතුයි (Modal එකේ පෙන්වීමට)
+                        .requestMatchers("/api/v1/interviewer/all").hasAnyAuthority("CANDIDATE", "ADMIN", "INTERVIEWER")
+                        // අනිත් interviewer endpoints (profile update/delete) අදාළ අයට පමණි
+                        .requestMatchers("/api/v1/interviewer/**").hasAnyAuthority("INTERVIEWER", "ADMIN")
 
+                        // 4. Availability & Booking Endpoints
+                        .requestMatchers("/api/v1/availability/**").hasAnyAuthority("INTERVIEWER", "ADMIN", "CANDIDATE")
+                        .requestMatchers("/api/v1/candidate/**").hasAnyAuthority("CANDIDATE", "ADMIN")
+                        .requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN")
+
+                        // 5. Any other request
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
@@ -51,7 +60,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // CORS Configuration එක React App එක (Port 5173) සමඟ වැඩ කිරීමට
+    // CORS Configuration - React App එක (Port 5173) සඳහා
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
