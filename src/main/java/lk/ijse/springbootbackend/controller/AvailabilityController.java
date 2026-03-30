@@ -27,6 +27,14 @@ public class AvailabilityController {
         return ResponseEntity.ok(availabilityService.getAllAvailabilities());
     }
 
+
+    @GetMapping("/interviewer/{interviewerId}")
+    public ResponseEntity<List<InterviewerAvailabilityDTO>> getByInterviewerId(
+            @PathVariable("interviewerId") Long interviewerId
+    ) {
+        return ResponseEntity.ok(availabilityService.getAvailabilitiesByInterviewerId(interviewerId));
+    }
+
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteAvailability(@PathVariable("id") Long id) { // 💡 මෙතන ("id") එකතු කරන්න
         try {

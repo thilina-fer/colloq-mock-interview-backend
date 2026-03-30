@@ -115,4 +115,12 @@ public class InterviewerAvailabilityImpl implements InterviewerAvailabilityServi
         availabilityRepo.delete(availability);
         return "Availability slot deleted successfully!";
     }
+
+    @Override
+    public List<InterviewerAvailabilityDTO> getAvailabilitiesByInterviewerId(Long interviewerId) {
+        // 🔍 Repository එකේ findByInterviewer_InterviewerId වගේ method එකක් ඕන වෙනවා
+        return availabilityRepo.findByInterviewer_InterviewerId(interviewerId).stream()
+                .map(availability -> modelMapper.map(availability, InterviewerAvailabilityDTO.class))
+                .collect(Collectors.toList());
+    }
 }
