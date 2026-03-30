@@ -54,20 +54,20 @@ public class LevelServiceImpl implements LevelService {
 
     @Override
     public List<LevelDTO> getAllLevels() {
-        System.out.println("--- [DEBUG] getAllLevels started ---");
+       // System.out.println("--- [DEBUG] getAllLevels started ---");
 
         List<Level> levels = levelRepo.findAll();
 
         // 1. DB එකෙන් දත්ත ආවාද කියලා බලමු
-        System.out.println("--- [DEBUG] DB levels count: " + levels.size());
+       // System.out.println("--- [DEBUG] DB levels count: " + levels.size());
 
         if (levels.isEmpty()) {
-            System.out.println("--- [DEBUG] Warning: No levels found in Database! ---");
+           // System.out.println("--- [DEBUG] Warning: No levels found in Database! ---");
         }
 
         List<LevelDTO> dtos = levels.stream().map(level -> {
             // 2. එකින් එක Entity එකේ දත්ත print කරලා බලමු
-            System.out.println("--- [DEBUG] Mapping Level: ID=" + level.getLevelId() + ", Name=" + level.getName());
+           // System.out.println("--- [DEBUG] Mapping Level: ID=" + level.getLevelId() + ", Name=" + level.getName());
 
             LevelDTO dto = new LevelDTO();
             dto.setLevelId(level.getLevelId());
@@ -75,7 +75,7 @@ public class LevelServiceImpl implements LevelService {
             return dto;
         }).collect(Collectors.toList());
 
-        System.out.println("--- [DEBUG] Mapping completed. Returning " + dtos.size() + " DTOs ---");
+      //  System.out.println("--- [DEBUG] Mapping completed. Returning " + dtos.size() + " DTOs ---");
         return dtos;
     }
 
