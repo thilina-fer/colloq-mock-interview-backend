@@ -108,7 +108,7 @@ public class BookingController {
      * 📋 Candidate ට තමන්ගේ Booking History එක (Dashboard එකේ පෙන්වන්න) බලාගැනීමට
      */
     @GetMapping("/candidate/{id}")
-    public ResponseEntity<List<BookingDTO>> getForCandidate(@PathVariable Long id) {
+    public ResponseEntity<List<BookingDTO>> getForCandidate(@PathVariable("id") Long id) { // 🎯 මෙතන ("id") කියලා අනිවාර්යයෙන්ම දාන්න
         return ResponseEntity.ok(bookingService.getBookingsByCandidate(id));
     }
 }

@@ -289,10 +289,10 @@ public class BookingServiceImpl implements BookingService {
                 .collect(Collectors.toList());
     }
 
+    // BookingServiceImpl.java
     @Override
     public List<BookingDTO> getBookingsByCandidate(Long candidateId) {
-        // Candidate ට තමන්ගේ සම්පූර්ණ Booking History එකම පෙන්වීමට
-        return bookingRepo.findByCandidate_CandidateId(candidateId)
+        return bookingRepo.findByCandidate_CandidateId(candidateId) // 🎯 මෙතන query එක check කරන්න
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -320,4 +320,6 @@ public class BookingServiceImpl implements BookingService {
 
         return dto;
     }
+
+
 }
