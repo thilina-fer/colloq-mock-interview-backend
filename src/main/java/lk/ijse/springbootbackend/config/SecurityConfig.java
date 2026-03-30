@@ -36,7 +36,7 @@ public class SecurityConfig {
 
                         // 2. Levels Endpoints
                         .requestMatchers("/api/v1/levels/**").authenticated()
-                        .requestMatchers("/api/v1/level/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/v1/levels/**").hasAuthority("ADMIN")
 
                         // 3. Interviewer Endpoints 🚀
                         // /all එකට CANDIDATE ටත් අවසර දිය යුතුයි (Modal එකේ පෙන්වීමට)
