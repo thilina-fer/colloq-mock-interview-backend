@@ -42,10 +42,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         try {
             username = jwtUtil.extractUsername(jwtToken);
-            System.out.println("--- [FILTER DEBUG] ---");
-            System.out.println("Step 1: Extracted Username: " + username);
         } catch (Exception e) {
-            System.out.println("ERROR: Could not extract username: " + e.getMessage());
+            System.out.println("❌ [JWT FILTER ERROR]: Could not extract username: " + e.getMessage());
             filterChain.doFilter(request, response);
             return;
         }
@@ -54,11 +52,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
             if (jwtUtil.validateToken(jwtToken)) {
-                System.out.println("Step 2: Token Validation: true");
 
-                // 💡 Role එක Extract කරගැනීම
+                // 💡 Token එකෙන් Role එක Extract කරගැනීම
                 String role = jwtUtil.extractRole(jwtToken);
-                System.out.println("Step 3: Role from Token: [" + role + "]");
+                System.out.println("🔍 [FILTER DEBUG] Token Username: " + username);
+                System.out.println("🔍 [FILTER DEBUG] Extracted Role: [" + role + "]");
 
                 // 💡 DB එකෙන් User ව හොයාගැනීම
                 Auth auth = authRepo.findByUsername(username)
@@ -66,30 +64,29 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         .orElse(null);
 
                 if (auth != null) {
-                    // ✅ "ROLE_" prefix එක අයින් කළා.
-                    // දැන් කෙලින්ම "CANDIDATE" හෝ "ADMIN" විදිහට Authority එක හැදෙනවා.
-                    String finalAuthority = role;
-                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority(finalAuthority);
+                    // Role එක "ADMIN", "CANDIDATE" වගේ පිරිසිදුව තිබිය යුතුයි
+                    if (role != null && !role.isEmpty()) {
+                        SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role);
+                        System.out.println("✅ [FILTER SUCCESS] Setting Authority: " + authority.getAuthority());
 
-                    System.out.println("Step 4: Setting Authority: " + authority.getAuthority());
-                    System.out.println("Step 5: User found in DB: " + auth.getUsername());
+                        UsernamePasswordAuthenticationToken authenticationToken =
+                                new UsernamePasswordAuthenticationToken(
+                                        auth,
+                                        null,
+                                        Collections.singletonList(authority)
+                                );
 
-                    UsernamePasswordAuthenticationToken authenticationToken =
-                            new UsernamePasswordAuthenticationToken(
-                                    auth,
-                                    null,
-                                    Collections.singletonList(authority)
-                            );
+                        authenticationToken.setDetails(
+                                new WebAuthenticationDetailsSource().buildDetails(request)
+                        );
 
-                    authenticationToken.setDetails(
-                            new WebAuthenticationDetailsSource().buildDetails(request)
-                    );
-
-                    // 💡 Security Context එකට අවසන් අවසරය ලබාදීම
-                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                    System.out.println("Step 6: Security Context Updated Successfully ✅");
+                        // Security Context එකට අවසන් අවසරය ලබාදීම
+                        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                    } else {
+                        System.out.println("⚠️ [FILTER WARN] Role is NULL or Empty for user: " + username);
+                    }
                 } else {
-                    System.out.println("ERROR: User not found in DB!");
+                    System.out.println("❌ [FILTER ERROR] User not found in database: " + username);
                 }
             }
         }

@@ -4,6 +4,7 @@ import lk.ijse.springbootbackend.util.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -31,25 +32,27 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        // 1. Public Endpoints (ලොගින් සහ සයින්අප්)
+                        // 💡 1. Public Endpoints (මුලින්ම තියෙන්න ඕනේ)
+                        .requestMatchers("/test/**").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
 
-                        // 2. Levels Endpoints
-                        .requestMatchers("/api/v1/levels/**").authenticated()
+                        // 💡 2. Admin Specific Endpoints (ඉහළින්ම තියන්න ලෙඩ දෙන නිසා)
+                        // මුලින්ම permitAll දාලා API එක වැඩද බලමු, ඊටපස්සේ hasAuthority දාමු
+                        .requestMatchers("/api/v1/admin/**").hasAnyAuthority("ADMIN")
+
+                        // 💡 3. Levels Endpoints
+                        .requestMatchers(HttpMethod.GET, "/api/v1/levels/**").authenticated()
                         .requestMatchers("/api/v1/levels/**").hasAuthority("ADMIN")
 
-                        // 3. Interviewer Endpoints 🚀
-                        // /all එකට CANDIDATE ටත් අවසර දිය යුතුයි (Modal එකේ පෙන්වීමට)
+                        // 💡 4. Interviewer Endpoints
                         .requestMatchers("/api/v1/interviewer/all").hasAnyAuthority("CANDIDATE", "ADMIN", "INTERVIEWER")
-                        // අනිත් interviewer endpoints (profile update/delete) අදාළ අයට පමණි
                         .requestMatchers("/api/v1/interviewer/**").hasAnyAuthority("INTERVIEWER", "ADMIN")
 
-                        // 4. Availability & Booking Endpoints
+                        // 💡 5. Other Endpoints
                         .requestMatchers("/api/v1/availability/**").hasAnyAuthority("INTERVIEWER", "ADMIN", "CANDIDATE")
                         .requestMatchers("/api/v1/candidate/**").hasAnyAuthority("CANDIDATE", "ADMIN")
-                        .requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN")
 
-                        // 5. Any other request
+                        // 💡 6. Any other request (අන්තිමට තියෙන්න ඕනේ)
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
@@ -60,7 +63,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // CORS Configuration - React App එක (Port 5173) සඳහා
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

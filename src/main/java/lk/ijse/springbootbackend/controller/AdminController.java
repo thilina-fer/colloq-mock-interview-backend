@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/admin")
 @RequiredArgsConstructor
 @CrossOrigin("http://localhost:5173")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyAuthority('ADMIN')")
 public class AdminController {
 
     private final AuthService authService;
@@ -38,6 +38,7 @@ public class AdminController {
 
     @GetMapping("/pending-interviewers")
     public ResponseEntity<APIResponse> getPending() {
+        System.out.println("🚀 [CRITICAL DEBUG] AdminController hit successful!"); // 👈 මේක අනිවාර්යයි
         return ResponseEntity.ok(new APIResponse(200, "Success", interviewerService.getPendingInterviewers()));
     }
 

@@ -169,6 +169,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -350,7 +351,7 @@ public class InterviewerServiceImpl implements InterviewerService {
         return dto;
     }
 
-    @Override
+    /*@Override
     public List<InterviewerResponseDTO> getPendingInterviewers() {
         System.out.println("DEBUG: Method started..."); // මේක වැටෙන්නම ඕනේ
 
@@ -369,6 +370,19 @@ public class InterviewerServiceImpl implements InterviewerService {
         System.out.println("DEBUG: Filtered Pending Count: " + pending.size());
 
         return pending.stream().map(this::mapToDTO).collect(Collectors.toList());
+    }
+*/
+    @Override
+    public List<InterviewerResponseDTO> getPendingInterviewers() {
+        System.out.println("🚀 [DEBUG] Fetching real data from DB...");
+
+        // 1. Repo එකෙන් ඔක්කොම අරන් Filter කරන එක වඩා ආරක්ෂිතයි දැනට
+        List<Interviewer> all = interviewerRepo.findAll();
+
+        return all.stream()
+                .filter(i -> i.getStatus() != null && i.getStatus().trim().equalsIgnoreCase("PENDING"))
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
