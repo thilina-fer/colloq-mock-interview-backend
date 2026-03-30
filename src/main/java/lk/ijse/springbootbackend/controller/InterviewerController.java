@@ -145,10 +145,28 @@ public class InterviewerController {
         return ResponseEntity.ok(new APIResponse(200, msg, null));
     }
 
-    // GET ALL INTERVIEWERS - Candidate Dashboard එකට
+    // 🎯 ලොග් වුණු ඕනෑම කෙනෙක්ට ACTIVE experts ලා බලන්න (Modal එක සඳහා)
     @GetMapping("/all")
-    public ResponseEntity<List<InterviewerResponseDTO>> getAllInterviewers() {
-        // 🎯 Service එකේදී අපි price සහ levelName set කරන නිසා මෙතනින් එන JSON එකේ ඒ දත්ත තියෙයි
-        return ResponseEntity.ok(interviewerService.getAllInterviewers());
+    public ResponseEntity<APIResponse> getActiveInterviewers() {
+        List<InterviewerResponseDTO> interviewers = interviewerService.getActiveInterviewers();
+        return ResponseEntity.ok(new APIResponse(200, "Success", interviewers));
     }
+
+    // 🎯 Admin ට විතරක් හැමෝවම පාලනය කරන්න
+    @GetMapping("/admin/all")
+    public ResponseEntity<APIResponse> getAllForAdmin() {
+        List<InterviewerResponseDTO> interviewers = interviewerService.getAllInterviewersForAdmin();
+        return ResponseEntity.ok(new APIResponse(200, "Success", interviewers));
+    }
+
+//
+//    // GET ALL INTERVIEWERS - Candidate Dashboard එකට
+//    @GetMapping("/all")
+//    public ResponseEntity<List<InterviewerResponseDTO>> getAllInterviewers() {
+//        // 🎯 Service එකේදී අපි price සහ levelName set කරන නිසා මෙතනින් එන JSON එකේ ඒ දත්ත තියෙයි
+//        return ResponseEntity.ok(interviewerService.getAllInterviewers());
+//    }
+
+
+
 }

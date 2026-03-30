@@ -420,35 +420,54 @@ public class InterviewerServiceImpl implements InterviewerService {
         return "Interviewer profile updated successfully";
     }
 
+//    @Override
+//    public List<InterviewerResponseDTO> getAllInterviewers() {
+//        return interviewerRepo.findAll().stream()
+//                .map(this::mapToDTO) // Using improved mapToDTO
+//                .collect(Collectors.toList());
+//    }
+
+
+    // 🎯 Candidate Selection Modal එකට (Active අය විතරයි)
     @Override
-    public List<InterviewerResponseDTO> getAllInterviewers() {
+    public List<InterviewerResponseDTO> getActiveInterviewers() {
         return interviewerRepo.findAll().stream()
-                .map(this::mapToDTO) // Using improved mapToDTO
+                .filter(i -> "ACTIVE".equalsIgnoreCase(i.getStatus()))
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    // 🎯 Admin Dashboard එකට (Pending සහ Active හැමෝම)
+    @Override
+    public List<InterviewerResponseDTO> getAllInterviewersForAdmin() {
+        return interviewerRepo.findAll().stream()
+                .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
     private InterviewerResponseDTO mapToDTO(Interviewer interviewer) {
-        InterviewerResponseDTO dto = modelMapper.map(interviewer, InterviewerResponseDTO.class);
+        InterviewerResponseDTO dto = new InterviewerResponseDTO();
 
-        // Map Auth details manually for safety
+        // Interviewer basic fields
+        dto.setInterviewerId(interviewer.getInterviewerId());
+        dto.setBio(interviewer.getBio());
+        dto.setCompany(interviewer.getCompany());
+        dto.setExperienceYears(interviewer.getExperienceYears());
+        dto.setSpecialization(interviewer.getSpecialization());
+        dto.setStatus(interviewer.getStatus());
+        dto.setProfilePicture(interviewer.getProfilePicture());
+
+        // 🎯 Auth table එකෙන් Username එක ගන්නවා
         if (interviewer.getAuth() != null) {
             dto.setUsername(interviewer.getAuth().getUsername());
-            dto.setEmail(interviewer.getAuth().getEmail());
         }
 
-        // 🎯 Map Level details (Price and Name)
+        // 🎯 Level table එකෙන් නම සහ Price එක ගන්නවා
         if (interviewer.getLevel() != null) {
-            dto.setPrice(interviewer.getLevel().getPrice());
             dto.setLevelName(interviewer.getLevel().getName());
-            // If DTO has levelId field
-            // dto.setLevelId(interviewer.getLevel().getLevelId());
-        } else {
-            dto.setPrice(0.0);
-            dto.setLevelName("PENDING");
+            dto.setPrice(interviewer.getLevel().getPrice());
+            dto.setLevelId(interviewer.getLevel().getLevelId());
         }
-
-        dto.setJoinSDate(interviewer.getJoinSDate() != null ? interviewer.getJoinSDate().toString() : "");
-        dto.setStatus(interviewer.getStatus() != null ? interviewer.getStatus() : "PENDING");
 
         return dto;
     }
