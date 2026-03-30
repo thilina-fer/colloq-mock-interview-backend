@@ -26,4 +26,8 @@ public class InterviewerResponseDTO {
     private String joinSDate;
 
 
+    private Double price;
+    private String levelName;
+
+
 }

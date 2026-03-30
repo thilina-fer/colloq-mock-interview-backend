@@ -17,7 +17,6 @@ public class Interviewer {
     private String joinSDate;
     private String bio;
     private String company;
-    private String designation;
     private Integer experienceYears;
     private String specialization;
     private String githubUrl;
@@ -29,4 +28,10 @@ public class Interviewer {
     @JoinColumn(name = "authId")
     @ToString.Exclude // 💡 මේක අනිවාර්යයි (Infinite loop එක නවත්වන්න)
     private Auth auth;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "levelId") // 💡 DB එකේ level_id කියලා column එකක් හැදෙයි
+    private Level level;
+
+
 }
