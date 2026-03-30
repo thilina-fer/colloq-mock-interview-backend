@@ -32,7 +32,12 @@ public class AvailabilityController {
     public ResponseEntity<List<InterviewerAvailabilityDTO>> getByInterviewerId(
             @PathVariable("interviewerId") Long interviewerId
     ) {
-        return ResponseEntity.ok(availabilityService.getAvailabilitiesByInterviewerId(interviewerId));
+        System.out.println("🚀 [Controller] Request received for Interviewer ID: " + interviewerId);
+
+        List<InterviewerAvailabilityDTO> availabilityList = availabilityService.getAvailabilitiesByInterviewerId(interviewerId);
+
+        System.out.println("✅ [Controller] Returning " + availabilityList.size() + " slots.");
+        return ResponseEntity.ok(availabilityList);
     }
 
     @DeleteMapping("/delete/{id}")

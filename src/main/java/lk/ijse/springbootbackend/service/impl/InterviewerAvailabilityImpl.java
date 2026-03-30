@@ -118,9 +118,16 @@ public class InterviewerAvailabilityImpl implements InterviewerAvailabilityServi
 
     @Override
     public List<InterviewerAvailabilityDTO> getAvailabilitiesByInterviewerId(Long interviewerId) {
-        // 🔍 Repository එකේ findByInterviewer_InterviewerId වගේ method එකක් ඕන වෙනවා
-        return availabilityRepo.findByInterviewer_InterviewerId(interviewerId).stream()
-                .map(availability -> modelMapper.map(availability, InterviewerAvailabilityDTO.class))
+        System.out.println("🔍 [Service] Fetching availability for ID: " + interviewerId);
+
+        List<InterviewerAvailability> entities = availabilityRepo.findByInterviewer_InterviewerId(interviewerId);
+        System.out.println("📦 [Service] Database found " + entities.size() + " records.");
+
+        return entities.stream()
+                .map(availability -> {
+                    System.out.println("🔄 [Service] Mapping Slot ID: " + availability.getAvailabilityId());
+                    return modelMapper.map(availability, InterviewerAvailabilityDTO.class);
+                })
                 .collect(Collectors.toList());
     }
 }

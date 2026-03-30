@@ -144,36 +144,69 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+//        http
+//                .cors(Customizer.withDefaults())
+//                .csrf(AbstractHttpConfigurer::disable)
+//                .authorizeHttpRequests(auth -> auth
+//                        // 1. Public Endpoints
+//                        .requestMatchers("/test/**", "/api/v1/auth/**").permitAll()
+//
+//                        // 2. Admin Specific
+//                        .requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN")
+//
+//                        // 3. Levels Endpoints
+//                        .requestMatchers(HttpMethod.GET, "/api/v1/levels/**").permitAll()
+//                        .requestMatchers("/api/v1/levels/**").hasAuthority("ADMIN")
+//
+//                        // 🎯 4. Interviewer Endpoints
+//                        // Profile එක complete කරන endpoint එකට ඕනෑම ලොග් වුණු කෙනෙක්ට අවසර දෙනවා (Role එක check නොකර)
+//                        .requestMatchers("/api/v1/interviewer/complete-interviewer-profile").authenticated()
+//                        // අනිත් interviewer endpoints වලට අදාළ roles අවශ්‍යයි
+//                        .requestMatchers("/api/v1/interviewer/all").hasAnyAuthority("CANDIDATE", "ADMIN", "INTERVIEWER")
+//                        .requestMatchers("/api/v1/interviewer/**").hasAnyAuthority("INTERVIEWER", "ADMIN")
+//
+//                        // 5. Availability Endpoints
+//                        .requestMatchers("/api/v1/availability/**").hasAnyAuthority("INTERVIEWER", "ADMIN", "CANDIDATE")
+//
+//                        // 6. Candidate Endpoints
+//                        .requestMatchers("/api/v1/candidate/**").hasAnyAuthority("CANDIDATE", "ADMIN")
+//
+//                        // 7. Any other request
+//                        .anyRequest().authenticated()
+//                )
+//                .sessionManagement(session -> session
+//                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+//                )
+//                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+//
+//        return http.build();
+//    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        // 1. Public Endpoints
                         .requestMatchers("/test/**", "/api/v1/auth/**").permitAll()
 
-                        // 2. Admin Specific
+                        // 🎯 [UPDATE] Availability endpoints - හැමෝටම අවසර දෙනවා (ලොග් වෙලා ඉන්නවා නම්)
+                        // මේක අනිවාර්යයෙන්ම පරීක්ෂා කරන්න
+                        .requestMatchers("/api/v1/availability/**").authenticated()
+
                         .requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN")
-
-                        // 3. Levels Endpoints
                         .requestMatchers(HttpMethod.GET, "/api/v1/levels/**").permitAll()
-                        .requestMatchers("/api/v1/levels/**").hasAuthority("ADMIN")
 
-                        // 🎯 4. Interviewer Endpoints
-                        // Profile එක complete කරන endpoint එකට ඕනෑම ලොග් වුණු කෙනෙක්ට අවසර දෙනවා (Role එක check නොකර)
+                        // Profile complete කරන එක ඕනෑම කෙනෙක්ට authenticated වෙලා නම් පුළුවන්
                         .requestMatchers("/api/v1/interviewer/complete-interviewer-profile").authenticated()
-                        // අනිත් interviewer endpoints වලට අදාළ roles අවශ්‍යයි
-                        .requestMatchers("/api/v1/interviewer/all").hasAnyAuthority("CANDIDATE", "ADMIN", "INTERVIEWER")
+
+                        .requestMatchers("/api/v1/interviewer/all").authenticated()
                         .requestMatchers("/api/v1/interviewer/**").hasAnyAuthority("INTERVIEWER", "ADMIN")
 
-                        // 5. Availability Endpoints
-                        .requestMatchers("/api/v1/availability/**").hasAnyAuthority("INTERVIEWER", "ADMIN", "CANDIDATE")
-
-                        // 6. Candidate Endpoints
                         .requestMatchers("/api/v1/candidate/**").hasAnyAuthority("CANDIDATE", "ADMIN")
 
-                        // 7. Any other request
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
