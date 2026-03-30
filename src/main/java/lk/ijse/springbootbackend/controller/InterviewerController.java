@@ -78,7 +78,10 @@ public class InterviewerController {
     // GET ALL
     @GetMapping("/all")
     public ResponseEntity<APIResponse> getAllInterviewers() {
+        System.out.println("Getting all interviewers...");
         List<InterviewerResponseDTO> data = interviewerService.getAllInterviewers();
+        System.out.println(data
+        );
         return ResponseEntity.ok(new APIResponse(200, "Success", data));
     }
 

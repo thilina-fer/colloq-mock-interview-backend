@@ -306,6 +306,7 @@ public class InterviewerServiceImpl implements InterviewerService {
 
     @Override
     public List<InterviewerResponseDTO> getAllInterviewers() {
+        System.out.println("DEBUG: Fetching all interviewers from DB..."); // Debug log
         return interviewerRepo.findAll()
                 .stream()
                 .map(this::mapToDTO)
