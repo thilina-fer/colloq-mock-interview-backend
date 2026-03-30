@@ -137,6 +137,72 @@ public class BookingServiceImpl implements BookingService {
     private final AuthRepo authRepo;
     private final ModelMapper modelMapper;
 
+//    @Override
+//    public String hireInterviewer(BookingDTO dto) {
+//        InterviewerAvailability availability = availabilityRepo.findById(dto.getAvailabilityId())
+//                .orElseThrow(() -> {
+//                    return new EntityNotFoundException("Requested time slot not found.");
+//                });
+//
+//        if (availability.isBooked()) {
+//            throw new IllegalStateException("This time slot is already booked or pending approval.");
+//        }
+//
+//        // 2. දැනට ලොග් වී සිටින User (Candidate) ගේ විස්තර Security Context එකෙන් ගැනීම
+//        String currentUsername  = SecurityContextHolder.getContext().getAuthentication().getName();
+//        System.out.println("🔍 [Auth Check] Current User Email from SecurityContext: [" + currentUsername + "]");
+//
+//        Auth auth = authRepo.findByUsername(currentUsername)
+//                .orElseThrow(() -> {
+//                    System.out.println("❌ ERROR: Auth record NOT FOUND in DB for email: [" + currentUsername + "]");
+//                    return new EntityNotFoundException("User authentication failed.");
+//                });
+//        System.out.println("✅ [Step 2] Auth record found: ID " + auth.getAuthId() + ", Role: " + auth.getRole());
+//
+//        Candidate candidate = candidateRepo.findByAuth(auth)
+//                .orElseThrow(() -> {
+//                    System.out.println("❌ ERROR: Candidate profile NOT FOUND for Auth ID: " + auth.getAuthId());
+//                    return new EntityNotFoundException("Candidate profile not found for the logged-in user.");
+//                });
+//        System.out.println("✅ [Step 2.1] Candidate profile found: ID " + candidate.getCandidateId());
+//
+//        // 3. අනෙක් අවශ්‍ය Entities සොයා ගැනීම
+//        Interviewer interviewer = interviewerRepo.findById(dto.getInterviewerId())
+//                .orElseThrow(() -> {
+//                    System.out.println("❌ ERROR: Interviewer NOT FOUND for ID: " + dto.getInterviewerId());
+//                    return new EntityNotFoundException("Selected interviewer not found.");
+//                });
+//        System.out.println("✅ [Step 3] Interviewer found: " + interviewer.getAuth().getUsername());
+//
+//        Level level = levelRepo.findById(dto.getLevelId())
+//                .orElseThrow(() -> {
+//                    System.out.println("❌ ERROR: Level NOT FOUND for ID: " + dto.getLevelId());
+//                    return new EntityNotFoundException("Selected interview level not found.");
+//                });
+//        System.out.println("✅ [Step 3.1] Level found: " + level.getName());
+//
+//        // 4. Booking Object එක නිර්මාණය කිරීම සහ දත්ත ඇතුළත් කිරීම
+//        System.out.println("📝 [Step 4] Creating new Booking object...");
+//        Bookings booking = new Bookings();
+//        booking.setJobType(dto.getJobType());
+//        booking.setCandidateNote(dto.getCandidateNote());
+//        booking.setStatus(BookingStatus.PENDING_APPROVAL);
+//        booking.setCandidate(candidate);
+//        booking.setInterviewer(interviewer);
+//        booking.setAvailability(availability);
+//        booking.setLevel(level);
+//
+//        // 5. Booking එක සේව් කිරීම සහ Slot එක Booked ලෙස ලකුණු කිරීම
+//        System.out.println("💾 [Step 5] Saving booking and updating slot status...");
+//        bookingRepo.save(booking);
+//        availability.setBooked(true);
+//        availabilityRepo.save(availability);
+//
+//        System.out.println("🎉 [Success] Booking saved successfully for candidate: " + candidate.getAuth().getEmail());
+//
+//        return "Hiring request sent successfully! Waiting for " + interviewer.getAuth().getUsername() + "'s approval.";
+//    }
+
     @Override
     public String hireInterviewer(BookingDTO dto) {
         // 1. Availability Slot එක පරීක්ෂා කිරීම
@@ -148,14 +214,16 @@ public class BookingServiceImpl implements BookingService {
         }
 
         // 2. දැනට ලොග් වී සිටින User (Candidate) ගේ විස්තර Security Context එකෙන් ගැනීම
-        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        Auth auth = authRepo.findByEmail(currentUserEmail)
-                .orElseThrow(() -> new EntityNotFoundException("User authentication failed."));
+        // 🎯 [Note] අපි හොයාගත්ත විදිහට මෙතනින් එන්නේ Username එකයි
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        Auth auth = authRepo.findByUsername(currentUsername)
+                .orElseThrow(() -> new EntityNotFoundException("User authentication failed for: " + currentUsername));
 
         Candidate candidate = candidateRepo.findByAuth(auth)
                 .orElseThrow(() -> new EntityNotFoundException("Candidate profile not found for the logged-in user."));
 
-        // 3. අනෙක් අවශ්‍ය Entities සොයා ගැනීම
+        // 3. අනෙක් අවශ්‍ය Entities සොයා ගැනීම (Interviewer සහ Level)
         Interviewer interviewer = interviewerRepo.findById(dto.getInterviewerId())
                 .orElseThrow(() -> new EntityNotFoundException("Selected interviewer not found."));
 

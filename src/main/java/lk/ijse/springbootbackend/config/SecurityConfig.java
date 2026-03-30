@@ -190,21 +190,28 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        // 1. Public Endpoints
                         .requestMatchers("/test/**", "/api/v1/auth/**").permitAll()
 
-                        // 🎯 [UPDATE] Availability endpoints - හැමෝටම අවසර දෙනවා (ලොග් වෙලා ඉන්නවා නම්)
-                        // මේක අනිවාර්යයෙන්ම පරීක්ෂා කරන්න
+                        // 2. Availability Endpoints
                         .requestMatchers("/api/v1/availability/**").authenticated()
 
+                        // 🎯 3. Booking Endpoints (අලුතින් එකතු කළා)
+                        // ඕනෑම ලොග් වුණු user කෙනෙක්ට (Candidate/Interviewer) booking කරන්න සහ බලන්න අවසර දෙනවා
+                        .requestMatchers("/api/v1/bookings/**").authenticated()
+
+                        // 4. Admin Specific
                         .requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN")
+
+                        // 5. Levels Endpoints
                         .requestMatchers(HttpMethod.GET, "/api/v1/levels/**").permitAll()
 
-                        // Profile complete කරන එක ඕනෑම කෙනෙක්ට authenticated වෙලා නම් පුළුවන්
+                        // 6. Interviewer Endpoints
                         .requestMatchers("/api/v1/interviewer/complete-interviewer-profile").authenticated()
-
                         .requestMatchers("/api/v1/interviewer/all").authenticated()
                         .requestMatchers("/api/v1/interviewer/**").hasAnyAuthority("INTERVIEWER", "ADMIN")
 
+                        // 7. Candidate Endpoints
                         .requestMatchers("/api/v1/candidate/**").hasAnyAuthority("CANDIDATE", "ADMIN")
 
                         .anyRequest().authenticated()
