@@ -53,7 +53,10 @@ public class LevelController {
 
     // 🚀 Update Level
     @PutMapping("/{id}")
-    public ResponseEntity<APIResponse> updateLevel(@PathVariable Long id, @RequestBody LevelDTO dto) {
+    public ResponseEntity<APIResponse> updateLevel(
+            @PathVariable("id") Long id, // 👈 මෙතන ("id") කියලා අනිවාර්යයෙන්ම දාන්න
+            @RequestBody LevelDTO dto
+    ) {
         String response = levelService.updateLevel(id, dto);
         return new ResponseEntity<>(
                 new APIResponse(200, "Level updated successfully", response),
@@ -61,9 +64,9 @@ public class LevelController {
         );
     }
 
-    // 🚀 Delete Level
+    // 🚀 Delete Level එකටත් මේකම කරන්න අමතක කරන්න එපා
     @DeleteMapping("/{id}")
-    public ResponseEntity<APIResponse> deleteLevel(@PathVariable Long id) {
+    public ResponseEntity<APIResponse> deleteLevel(@PathVariable("id") Long id) { // 👈 මෙතනත් ("id")
         String response = levelService.deleteLevel(id);
         return new ResponseEntity<>(
                 new APIResponse(200, "Level deleted successfully", response),
