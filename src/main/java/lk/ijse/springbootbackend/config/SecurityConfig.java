@@ -26,33 +26,72 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+//        http
+//                .cors(Customizer.withDefaults())
+//                .csrf(AbstractHttpConfigurer::disable)
+//                .authorizeHttpRequests(auth -> auth
+//                        // 💡 1. Public Endpoints (මුලින්ම තියෙන්න ඕනේ)
+//                        .requestMatchers("/test/**").permitAll()
+//                        .requestMatchers("/api/v1/auth/**").permitAll()
+//
+//                        // 💡 2. Admin Specific Endpoints (ඉහළින්ම තියන්න ලෙඩ දෙන නිසා)
+//                        // මුලින්ම permitAll දාලා API එක වැඩද බලමු, ඊටපස්සේ hasAuthority දාමු
+//                        .requestMatchers("/api/v1/admin/**").hasAnyAuthority("ADMIN")
+//
+//                        // 💡 3. Levels Endpoints
+//                        .requestMatchers(HttpMethod.GET, "/api/v1/levels/**").authenticated()
+//                        .requestMatchers("/api/v1/levels/**").hasAuthority("ADMIN")
+//
+//                        // 💡 4. Interviewer Endpoints
+//                        .requestMatchers("/api/v1/interviewer/all").hasAnyAuthority("CANDIDATE", "ADMIN", "INTERVIEWER")
+//                        .requestMatchers("/api/v1/interviewer/**").hasAnyAuthority("INTERVIEWER", "ADMIN")
+//
+//                        // 💡 5. Other Endpoints
+//                        .requestMatchers("/api/v1/availability/**").hasAnyAuthority("INTERVIEWER", "ADMIN", "CANDIDATE")
+//                        .requestMatchers("/api/v1/candidate/**").hasAnyAuthority("CANDIDATE", "ADMIN")
+//
+//                        // 💡 6. Any other request (අන්තිමට තියෙන්න ඕනේ)
+//                        .anyRequest().authenticated()
+//                )
+//                .sessionManagement(session -> session
+//                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+//                )
+//                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+//
+//        return http.build();
+//    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        // 💡 1. Public Endpoints (මුලින්ම තියෙන්න ඕනේ)
-                        .requestMatchers("/test/**").permitAll()
-                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        // 1. Public Endpoints
+                        .requestMatchers("/test/**", "/api/v1/auth/**").permitAll()
 
-                        // 💡 2. Admin Specific Endpoints (ඉහළින්ම තියන්න ලෙඩ දෙන නිසා)
-                        // මුලින්ම permitAll දාලා API එක වැඩද බලමු, ඊටපස්සේ hasAuthority දාමු
-                        .requestMatchers("/api/v1/admin/**").hasAnyAuthority("ADMIN")
+                        // 2. Admin Specific
+                        .requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN")
 
-                        // 💡 3. Levels Endpoints
-                        .requestMatchers(HttpMethod.GET, "/api/v1/levels/**").authenticated()
+                        // 3. Levels Endpoints
+                        // Candidate ටත් level බලන්න ඕනෙ වෙයි නේද? (Experts selection එකේදී price බලන්න)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/levels/**").hasAnyAuthority("ADMIN", "CANDIDATE", "INTERVIEWER")
                         .requestMatchers("/api/v1/levels/**").hasAuthority("ADMIN")
 
-                        // 💡 4. Interviewer Endpoints
+                        // 4. Interviewer Endpoints
                         .requestMatchers("/api/v1/interviewer/all").hasAnyAuthority("CANDIDATE", "ADMIN", "INTERVIEWER")
+                        // අනිත් interviewer endpoints (profile update වගේ) INTERVIEWER ට විතරයි
                         .requestMatchers("/api/v1/interviewer/**").hasAnyAuthority("INTERVIEWER", "ADMIN")
 
-                        // 💡 5. Other Endpoints
+                        // 5. Availability Endpoints (🎯 403 එක එන්න පුළුවන් තැන)
+                        // Candidate ටත් slots බලන්න ඕනෙ නිසා මෙතන "CANDIDATE" තියෙන්නම ඕනේ
                         .requestMatchers("/api/v1/availability/**").hasAnyAuthority("INTERVIEWER", "ADMIN", "CANDIDATE")
+
+                        // 6. Candidate Endpoints
                         .requestMatchers("/api/v1/candidate/**").hasAnyAuthority("CANDIDATE", "ADMIN")
 
-                        // 💡 6. Any other request (අන්තිමට තියෙන්න ඕනේ)
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

@@ -24,7 +24,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final AuthRepo authRepo;
 
-    @Override
+    /*@Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
@@ -89,6 +89,68 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     System.out.println("❌ [FILTER ERROR] User not found in database: " + username);
                 }
             }
+        }
+
+        filterChain.doFilter(request, response);
+    }*/
+
+    // ... පරණ imports ...
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+
+        final String authHeader = request.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        final String jwtToken = authHeader.substring(7);
+        final String username;
+
+        try {
+            username = jwtUtil.extractUsername(jwtToken);
+            // 💡 Token එක Valid ද කියලත් මෙතනම check කරන එක හොඳයි
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                if (jwtUtil.validateToken(jwtToken)) {
+                    String role = jwtUtil.extractRole(jwtToken);
+
+                    // 🎯 [FIX] Role එක Uppercase කරන්න (උදා: candidate -> CANDIDATE)
+                    if (role != null) {
+                        role = role.toUpperCase().trim();
+                    }
+
+                    Auth auth = authRepo.findByUsername(username)
+                            .or(() -> authRepo.findByEmail(username))
+                            .orElse(null);
+
+                    if (auth != null && role != null && !role.isEmpty()) {
+                        // 💡 SecurityConfig එකේ තියෙන නමටම (CANDIDATE) සමාන වෙනවා දැන්
+                        SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role);
+
+                        UsernamePasswordAuthenticationToken authenticationToken =
+                                new UsernamePasswordAuthenticationToken(
+                                        auth,
+                                        null,
+                                        Collections.singletonList(authority)
+                                );
+
+                        authenticationToken.setDetails(
+                                new WebAuthenticationDetailsSource().buildDetails(request)
+                        );
+
+                        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                        System.out.println("✅ [JWT FILTER] Authenticated user: " + username + " with role: " + role);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("❌ [JWT FILTER ERROR]: " + e.getMessage());
+            // මෙතනදී return වෙන්න එපා, filterChain එක දිගටම යවන්න
         }
 
         filterChain.doFilter(request, response);
