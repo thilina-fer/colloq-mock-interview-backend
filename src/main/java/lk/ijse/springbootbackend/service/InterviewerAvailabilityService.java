@@ -6,5 +6,5 @@ public interface InterviewerAvailabilityService {
     String saveAvailabilityBatch(List<InterviewerAvailabilityDTO> dtos); // 💡 Batch Save
     public List<InterviewerAvailabilityDTO> getAllAvailabilities();
     String deleteAvailability(Long id);
-
+    List<InterviewerAvailabilityDTO> getAvailabilitiesByInterviewerId(Long interviewerId);
 }
