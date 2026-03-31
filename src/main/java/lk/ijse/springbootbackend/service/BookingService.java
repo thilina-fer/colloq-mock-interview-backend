@@ -11,4 +11,5 @@ public interface BookingService {
     String rejectBooking(Long bookingId);
     public List<BookingDTO> getBookingsByInterviewer(String username);
     List<BookingDTO> getBookingsByCandidate(Long candidateId);
+    List<BookingDTO> getApprovedBookingsForInterviewer(String username);
 }
