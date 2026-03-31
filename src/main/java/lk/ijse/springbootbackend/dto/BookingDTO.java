@@ -13,8 +13,23 @@ public class BookingDTO {
     private String jobType;
     private String candidateNote;
     private BookingStatus status;
-    private Long candidateId;
+
     private Long availabilityId;
     private Long interviewerId;
     private Long levelId;
+
+    private String interviewerName;
+    private String interviewerProfilePic;
+    private String date;
+    private String startTime;
+    private String endTime;
+    private String levelName;
+
+    private String candidateName;
+    private String candidateProfilePic;
+    private String candidateGithub;
+    private String candidateLinkedin;
+
+    private boolean paid;
+    private String meetingLink;
 }

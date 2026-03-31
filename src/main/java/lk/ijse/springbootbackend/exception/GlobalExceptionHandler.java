@@ -93,13 +93,13 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public APIResponse handleException(Exception ex) {
-        return new APIResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Internal server error",
-                "An unexpected error occurred. Please try again later."
-        );
-    }
+//    @ExceptionHandler(Exception.class)
+//    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+//    public APIResponse handleException(Exception ex) {
+//        return new APIResponse(
+//                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+//                "Internal server error",
+//                "An unexpected error occurred. Please try again later."
+//        );
+//    }
 }

@@ -1,0 +1,67 @@
+package lk.ijse.springbootbackend.controller;
+
+import lk.ijse.springbootbackend.dto.APIResponse;
+import lk.ijse.springbootbackend.dto.InterviewerResponseDTO;
+import lk.ijse.springbootbackend.dto.auth.RegisterDTO;
+import lk.ijse.springbootbackend.service.AuthService;
+import lk.ijse.springbootbackend.service.InterviewerService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/v1/admin")
+@RequiredArgsConstructor
+@CrossOrigin("http://localhost:5173")
+@PreAuthorize("hasAnyAuthority('ADMIN')")
+public class AdminController {
+
+    private final AuthService authService;
+    private final InterviewerService interviewerService;
+
+    // අලුත් Admin කෙනෙක්ව add කිරීම
+    @PostMapping("/add-admin")
+    public ResponseEntity<String> addAdmin(@RequestBody RegisterDTO registerDTO) {
+        // මෙතනදී AuthService එකේ අපි අලුතින් හදපු method එක call කරනවා
+        return ResponseEntity.ok(authService.createAdmin(registerDTO));
+    }
+
+    // පද්ධතියේ ඉන්න ඔක්කොම Users ලව බලාගන්න (Admin ට විතරයි පුළුවන්)
+    @GetMapping("/users")
+    public ResponseEntity<?> getAllUsers() {
+        // මේක පස්සේ හදමු
+        return ResponseEntity.ok("Only Admins can see this");
+    }
+
+
+    @GetMapping("/pending-interviewers")
+    public ResponseEntity<APIResponse> getPending() {
+        System.out.println("🚀 [CRITICAL DEBUG] AdminController hit successful!"); // 👈 මේක අනිවාර්යයි
+        return ResponseEntity.ok(new APIResponse(200, "Success", interviewerService.getPendingInterviewers()));
+    }
+
+    // AdminController.java
+
+    @PutMapping("/approve-interviewer/{id}")
+    public ResponseEntity<APIResponse> approveInterviewer(@PathVariable("id") Long interviewerId) {
+        // 💡 @PathVariable("id") මගින් URL එකේ තියෙන {id} කෑල්ල interviewerId එකට සම්බන්ධ කරනවා
+
+        InterviewerResponseDTO approvedDto = interviewerService.approveInterviewer(interviewerId);
+
+        return new ResponseEntity<>(
+                new APIResponse(200, "Interviewer Approved Successfully", approvedDto),
+                HttpStatus.OK
+        );
+    }
+
+    @DeleteMapping("/reject-interviewer/{id}")
+    public ResponseEntity<APIResponse> rejectInterviewer(@PathVariable("id") Long interviewerId) {
+        String message = interviewerService.rejectInterviewer(interviewerId);
+        return new ResponseEntity<>(
+                new APIResponse(200, message, null),
+                HttpStatus.OK
+        );
+    }
+}

@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+
 public class InterviewerResponseDTO {
     private Long interviewerId;
     private String username;
@@ -17,7 +17,7 @@ public class InterviewerResponseDTO {
     private String bio;
     private String company;
     private String designation;
-    private Integer experienceYears;
+    private Integer experienceYears; // 💡 'int' වෙනුවට 'Integer' (Capital I)
     private String specialization;
     private String githubUrl;
     private String linkedinUrl;
@@ -26,6 +26,9 @@ public class InterviewerResponseDTO {
     private String joinSDate;
 
 
-    public InterviewerResponseDTO(Long interviewerId, String username, String email, String bio, String company, String designation, Integer experienceYears, String specialization, String githubUrl, String linkedinUrl, String profilePicture, String status) {
-    }
+    private Long levelId;
+    private Double price;
+    private String levelName;
+
+    private Double walletBalance;
 }

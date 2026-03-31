@@ -22,13 +22,14 @@ public class CandidateController {
 
     // COMPLETE PROFILE - Multipart form data support add kala
     @PostMapping(value = "/complete-profile", consumes = {"multipart/form-data"})
-    public String completeProfile(
+    public ResponseEntity<APIResponse> completeProfile(
             @RequestPart("data") CompleteCandidateProfileDTO dto,
             @RequestPart(value = "image", required = false) MultipartFile imageFile,
             Authentication authentication) {
-        return candidateService.completeCandidateProfile(dto, imageFile, authentication.getName());
-    }
 
+        String result = candidateService.completeCandidateProfile(dto, imageFile, authentication.getName());
+        return ResponseEntity.ok(new APIResponse(200, "Success", result));
+    }
     @PostMapping(value = "/update-profile", consumes = {"multipart/form-data"})
     public ResponseEntity<APIResponse> updateProfile(
             @RequestPart("data") CandidateResponseDTO dto,

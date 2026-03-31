@@ -11,6 +11,7 @@ import lk.ijse.springbootbackend.repo.CandidateRepo;
 import lk.ijse.springbootbackend.service.CandidateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -25,17 +26,70 @@ public class CandidateServiceImpl implements CandidateService {
     private final AuthRepo authRepo;
     private final Cloudinary cloudinary; // Cloudinary eka inject kala
 
+//    @Override
+//    @Transactional // 💡 අනිවාර්යයෙන්ම Transactional දාන්න Table දෙකක් update කරන නිසා
+//    public String completeCandidateProfile(CompleteCandidateProfileDTO dto, MultipartFile imageFile, String username) {
+//
+//        // 1. Email හෝ Username දෙකෙන්ම හොයන්න ඉඩ දෙමු
+//        Auth auth = authRepo.findByUsername(username)
+//                .or(() -> authRepo.findByEmail(username))
+//                .orElseThrow(() -> new RuntimeException("Auth user not found"));
+//
+//        if (candidateRepo.existsByAuth(auth)) {
+//            throw new RuntimeException("Candidate profile already exists");
+//        }
+//
+//        Candidate candidate = new Candidate();
+//        candidate.setAuth(auth);
+//        candidate.setJoinDate(java.time.LocalDate.now().toString());
+//        candidate.setBio(dto.getBio());
+//        candidate.setGithubUrl(dto.getGithubUrl());
+//        candidate.setLinkedinUrl(dto.getLinkedinUrl());
+//        candidate.setStatus("ACTIVE");
+//
+//        // Cloudinary Image Upload Logic
+//        try {
+//            if (imageFile != null && !imageFile.isEmpty()) {
+//                Map uploadResult = cloudinary.uploader().upload(imageFile.getBytes(),
+//                        ObjectUtils.asMap("folder", "colloq_profiles/candidates"));
+//
+//                String imageUrl = uploadResult.get("url").toString();
+//
+//                // ✅ Candidate table එකට URL එක දානවා
+//                candidate.setProfilePicture(imageUrl);
+//
+//                // ✅ Auth table එකටත් URL එක අනිවාර්යයෙන්ම දාන්න (එතකොටයි Header එකේ පේන්නේ)
+//                auth.setProfilePic(imageUrl);
+//
+//            } else {
+//                candidate.setProfilePicture(dto.getProfilePicture());
+//                if (dto.getProfilePicture() != null) {
+//                    auth.setProfilePic(dto.getProfilePicture());
+//                }
+//            }
+//        } catch (Exception e) {
+//            throw new RuntimeException("Failed to upload image: " + e.getMessage());
+//        }
+//
+//        candidateRepo.save(candidate);
+//        authRepo.save(auth); // 💡 Auth table එකත් save කරන්න අමතක කරන්න එපා
+//
+//        return "Candidate profile completed successfully";
+//    }
+
     @Override
+    @Transactional
     public String completeCandidateProfile(CompleteCandidateProfileDTO dto, MultipartFile imageFile, String username) {
 
+        // 1. User ව හොයාගන්නවා
         Auth auth = authRepo.findByUsername(username)
+                .or(() -> authRepo.findByEmail(username))
                 .orElseThrow(() -> new RuntimeException("Auth user not found"));
 
-        if (candidateRepo.existsByAuth(auth)) {
-            throw new RuntimeException("Candidate profile already exists");
-        }
+        // 2. 💡 වැදගත්: existsByAuth බලලා error එකක් දෙනවා වෙනුවට, තියෙන record එක ගන්නවා
+        Candidate candidate = candidateRepo.findByAuth(auth)
+                .orElse(new Candidate()); // නැත්නම් විතරක් අලුත් එකක් හදනවා
 
-        Candidate candidate = new Candidate();
         candidate.setAuth(auth);
         candidate.setJoinDate(java.time.LocalDate.now().toString());
         candidate.setBio(dto.getBio());
@@ -43,23 +97,30 @@ public class CandidateServiceImpl implements CandidateService {
         candidate.setLinkedinUrl(dto.getLinkedinUrl());
         candidate.setStatus("ACTIVE");
 
-        // Cloudinary Image Upload Logic
+        // 3. Cloudinary Upload Logic (ඔයාගේ පරණ එකමයි)
         try {
             if (imageFile != null && !imageFile.isEmpty()) {
                 Map uploadResult = cloudinary.uploader().upload(imageFile.getBytes(),
-                        ObjectUtils.asMap("folder", "colloq_profiles"));
-                candidate.setProfilePicture(uploadResult.get("url").toString());
-            } else {
-                candidate.setProfilePicture(dto.getProfilePicture()); // default ui-avatar eka
+                        ObjectUtils.asMap("folder", "colloq_profiles/candidates"));
+
+                String imageUrl = uploadResult.get("url").toString();
+                candidate.setProfilePicture(imageUrl);
+                auth.setProfilePic(imageUrl); // Header එකට profile pic එක දානවා
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to upload image: " + e.getMessage());
         }
 
+        // 4. Update කරපු record එක save කරනවා
         candidateRepo.save(candidate);
 
-        return "Candidate profile completed successfully";
+        // 💡 Profile එක update වුණා කියලා flag එක true කරන්න
+        auth.setProfileUpdated(true);
+        authRepo.save(auth);
+
+        return "Candidate profile updated successfully";
     }
+
 
     @Override
     public CandidateResponseDTO getCandidateProfile(String username) {

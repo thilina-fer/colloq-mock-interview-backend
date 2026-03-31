@@ -4,6 +4,7 @@ import lk.ijse.springbootbackend.util.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -27,35 +28,51 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
         http
-                .cors(Customizer.withDefaults()) // CORS enable කිරීම
+                .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        // 1. Auth API (Login, Register) walata witarak Token nathuwa yanna denawa
-                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        // 1. Public Endpoints
+                        .requestMatchers(
+                                "/api/v1/auth/login",
+                                "/api/v1/auth/register",
+                                "/api/v1/auth/google",
+                                "/test/**"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/levels/**").permitAll()
 
-                        // 2. Candidate saha Interviewer API walata aniwaryayen JWT Token eka oni!
-                        .requestMatchers("/api/v1/candidate/**").authenticated()
-                        .requestMatchers("/api/v1/interviewer/**").authenticated()
+                        // 2. Shared Authenticated Endpoints
+                        .requestMatchers("/api/v1/auth/me").authenticated()
+                        .requestMatchers("/api/v1/bookings/**", "/api/v1/booking/**").authenticated()
+                        .requestMatchers("/api/v1/payments/**").authenticated()
+                        .requestMatchers("/api/v1/availability/**").authenticated()
+                        .requestMatchers("/api/v1/interviewer/all").authenticated()
+                        .requestMatchers("/api/v1/interviewer/complete-interviewer-profile").authenticated()
 
-                        // 3. Anith okkoma API calls secure karanawa
+                        // 🎯 3. Admin Only Endpoints (ROLE_ prefix එක නැතිව)
+                        .requestMatchers("/api/v1/admin/**").hasAnyAuthority("ADMIN")
+                        .requestMatchers("/api/v1/levels/**").hasAnyAuthority("ADMIN")
+
+                        // 🎯 4. Interviewer Specific Endpoints
+                        .requestMatchers("/api/v1/interviewer/**").hasAnyAuthority("INTERVIEWER", "ADMIN")
+
+                        // 🎯 5. Candidate Specific Endpoints
+                        .requestMatchers("/api/v1/candidate/**").hasAnyAuthority("CANDIDATE", "ADMIN")
+
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                // Filter eka add karanawa JWT eka check karanna
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // CORS Configuration එක මෙතනට අනිවාර්යයි
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // React App URL
+        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

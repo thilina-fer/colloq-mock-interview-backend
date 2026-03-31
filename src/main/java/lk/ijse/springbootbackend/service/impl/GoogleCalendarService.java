@@ -51,41 +51,40 @@ public class GoogleCalendarService {
     public String createMeetLink(String title, String description, java.util.Date startDate, java.util.Date endDate) {
         try {
             final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
-
             Calendar service = new Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
                     .setApplicationName(APPLICATION_NAME)
                     .build();
 
             Event event = new Event().setSummary(title).setDescription(description);
-
             event.setStart(new EventDateTime().setDateTime(new com.google.api.client.util.DateTime(startDate)).setTimeZone("Asia/Colombo"));
             event.setEnd(new EventDateTime().setDateTime(new com.google.api.client.util.DateTime(endDate)).setTimeZone("Asia/Colombo"));
 
-            ConferenceData conferenceData = new ConferenceData();
-            CreateConferenceRequest conferenceRequest = new CreateConferenceRequest();
-            conferenceRequest.setRequestId(UUID.randomUUID().toString());
-
-            ConferenceSolutionKey solutionKey = new ConferenceSolutionKey();
-            solutionKey.setType("hangoutsMeet"); // නියම Google Meet ලින්ක් එක!
-            conferenceRequest.setConferenceSolutionKey(solutionKey);
-
-            conferenceData.setCreateRequest(conferenceRequest);
+            // ✨ Google Meet Setup
+            ConferenceSolutionKey solutionKey = new ConferenceSolutionKey().setType("hangoutsMeet");
+            CreateConferenceRequest createRequest = new CreateConferenceRequest()
+                    .setRequestId(UUID.randomUUID().toString())
+                    .setConferenceSolutionKey(solutionKey);
+            ConferenceData conferenceData = new ConferenceData().setCreateRequest(createRequest);
             event.setConferenceData(conferenceData);
 
-            Event createdEvent = service.events().insert("primary", event) // primary දැම්මම ඔයාගේ ඇත්ත කැලැන්ඩර් එකටම වැටෙනවා
+            // 🎯 Insert event with conferenceDataVersion = 1
+            Event createdEvent = service.events().insert("primary", event)
                     .setConferenceDataVersion(1)
                     .execute();
 
+            // 🔄 Retry logic to get the link
             String meetLink = null;
-            int retryCount = 0;
-            while (meetLink == null && retryCount < 5) {
-                Thread.sleep(2000);
+            for (int i = 0; i < 5; i++) {
+                if (createdEvent.getConferenceData() != null &&
+                        createdEvent.getConferenceData().getEntryPoints() != null) {
+                    meetLink = createdEvent.getConferenceData().getEntryPoints().get(0).getUri();
+                    break;
+                }
+                Thread.sleep(1500); // පොඩි වෙලාවක් ඉමු Google එක ලින්ක් එක හදනකම්
                 createdEvent = service.events().get("primary", createdEvent.getId()).execute();
-                meetLink = createdEvent.getHangoutLink();
-                retryCount++;
             }
 
-            return meetLink != null ? meetLink : "Link delayed.";
+            return meetLink != null ? meetLink : "Link generation failed.";
 
         } catch (Exception e) {
             e.printStackTrace();

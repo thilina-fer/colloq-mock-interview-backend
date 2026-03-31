@@ -1,32 +1,39 @@
 package lk.ijse.springbootbackend.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
+@Getter // 💡 @Data වෙනුවට මේවා පාවිච්චි කරන්න
+@Setter
 public class Interviewer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long interviewerId;
-//    private Long authId;
+
     private String joinSDate;
     private String bio;
     private String company;
-    private String designation;
     private Integer experienceYears;
     private String specialization;
     private String githubUrl;
     private String linkedinUrl;
     private String profilePicture;
     private String status;
+    @Column(columnDefinition = "DOUBLE DEFAULT 0.0")
+    private Double walletBalance = 0.0;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.EAGER) // 💡 Eager load කරන්න ෂුවර් වෙන්න
     @JoinColumn(name = "authId")
+    @ToString.Exclude // 💡 මේක අනිවාර්යයි (Infinite loop එක නවත්වන්න)
     private Auth auth;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "levelId") // 💡 DB එකේ level_id කියලා column එකක් හැදෙයි
+    private Level level;
+
+
 }

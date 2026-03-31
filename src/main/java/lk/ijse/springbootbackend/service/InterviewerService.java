@@ -11,5 +11,11 @@ public interface InterviewerService {
     InterviewerResponseDTO getInterviewerProfile(String username);
     String updateInterviewerProfile(CompleteInterviewerProfileDTO dto, MultipartFile imageFile, String username);
     String deleteInterviewerProfile(Long interviewerId, String username);
-    List<InterviewerResponseDTO> getAllInterviewers();
+//    List<InterviewerResponseDTO> getAllInterviewers();
+    List<InterviewerResponseDTO> getPendingInterviewers();
+    InterviewerResponseDTO approveInterviewer(Long interviewerId);
+    String rejectInterviewer(Long interviewerId);
+
+    List<InterviewerResponseDTO> getActiveInterviewers(); // Candidate ට පෙන්වන්න
+    List<InterviewerResponseDTO> getAllInterviewersForAdmin(); // Admin ට පෙන්වන්න
 }
