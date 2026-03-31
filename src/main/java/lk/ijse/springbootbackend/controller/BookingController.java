@@ -94,6 +94,12 @@ public class BookingController {
         }
     }
 
+    @GetMapping("/candidate/my-bookings")
+    public ResponseEntity<List<BookingDTO>> getCandidateBookings(Principal principal) {
+        List<BookingDTO> myBookings = bookingService.getBookingsForCandidate(principal.getName());
+        return ResponseEntity.ok(myBookings);
+    }
+
     @PutMapping("/reject/{id}")
     public ResponseEntity<String> reject(@PathVariable Long id) {
         return ResponseEntity.ok(bookingService.rejectBooking(id));

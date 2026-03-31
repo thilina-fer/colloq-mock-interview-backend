@@ -159,6 +159,24 @@ public class BookingServiceImpl implements BookingService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<BookingDTO> getBookingsForCandidate(String username) {
+        // 1. Username එකෙන් Candidate ව හොයාගන්න
+        Auth auth = authRepo.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Candidate candidate = candidateRepo.findByAuth(auth)
+                .orElseThrow(() -> new RuntimeException("Candidate profile not found"));
+
+        // 2. Candidate ID එකෙන් සියලුම bookings ටික ගන්න
+        List<Bookings> bookings = bookingRepo.findByCandidate_CandidateId(candidate.getCandidateId());
+
+        // 3. Entity list එක DTO list එකක් බවට හරවලා එවන්න
+        return bookings.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     private BookingDTO convertToDTO(Bookings booking) {
         BookingDTO dto = modelMapper.map(booking, BookingDTO.class);
 
