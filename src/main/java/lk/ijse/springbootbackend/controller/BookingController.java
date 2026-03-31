@@ -109,4 +109,9 @@ public class BookingController {
     public ResponseEntity<List<BookingDTO>> getForCandidate(@PathVariable("id") Long id) { // 🎯 මෙතන ("id") කියලා අනිවාර්යයෙන්ම දාන්න
         return ResponseEntity.ok(bookingService.getBookingsByCandidate(id));
     }
+
+    @GetMapping("/interviewer/approved")
+    public ResponseEntity<List<BookingDTO>> getApprovedRequests(Principal principal) {
+        return ResponseEntity.ok(bookingService.getApprovedBookingsForInterviewer(principal.getName()));
+    }
 }

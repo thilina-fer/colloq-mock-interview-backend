@@ -143,6 +143,22 @@ public class BookingServiceImpl implements BookingService {
         bookingRepo.save(booking);
         return "Status updated to " + status;
     }
+
+    @Override
+    public List<BookingDTO> getApprovedBookingsForInterviewer(String username) {
+        Auth auth = authRepo.findByUsername(username).orElseThrow();
+        Interviewer interviewer = interviewerRepo.findByAuth(auth).orElseThrow();
+
+        // 🎯 මෙතන Status එක APPROVED ඒවා විතරක් filter කරනවා
+        return bookingRepo.findByInterviewer_InterviewerIdAndStatus(
+                        interviewer.getInterviewerId(),
+                        BookingStatus.APPROVED
+                )
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     private BookingDTO convertToDTO(Bookings booking) {
         BookingDTO dto = modelMapper.map(booking, BookingDTO.class);
 
