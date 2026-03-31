@@ -48,6 +48,7 @@ public class BookingController {
 package lk.ijse.springbootbackend.controller;
 
 import lk.ijse.springbootbackend.dto.BookingDTO;
+import lk.ijse.springbootbackend.entity.BookingStatus;
 import lk.ijse.springbootbackend.service.BookingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -81,35 +82,29 @@ public class BookingController {
         }
     }
 
-    /**
-     * ✅ Interviewer විසින් Booking එකක් Approve කිරීම
-     */
-    @PutMapping("/approve/{id}")
-    public ResponseEntity<String> approve(@PathVariable Long id) {
-        return ResponseEntity.ok(bookingService.approveBooking(id));
+    @PutMapping("/approve/{bookingId}")
+    public ResponseEntity<String> approveBooking(@PathVariable("bookingId") Long bookingId) { // 🎯 ("bookingId") කියලා පැහැදිලිවම දාන්න
+        try {
+            System.out.println("🚀 [Backend] Approving Booking ID: " + bookingId);
+            String result = bookingService.updateBookingStatus(bookingId, BookingStatus.APPROVED);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            System.err.println("❌ [Backend] Error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
-    /**
-     * ❌ Interviewer විසින් Booking එකක් Reject කිරීම
-     */
     @PutMapping("/reject/{id}")
     public ResponseEntity<String> reject(@PathVariable Long id) {
         return ResponseEntity.ok(bookingService.rejectBooking(id));
     }
 
-    /**
-     * 📊 Interviewer ට තමන්ට ලැබුණු Pending Requests බලාගැනීමට
-     */
-    // ❌ පරණ වැරදි එක අයින් කරලා මේක දාන්න
     @GetMapping("/interviewer/my-requests")
     public ResponseEntity<List<BookingDTO>> getForInterviewer(Principal principal) {
         // principal.getName() එකෙන් ලොග් වෙලා ඉන්න Interviewer ගේ Username එක Service එකට යනවා
         return ResponseEntity.ok(bookingService.getBookingsByInterviewer(principal.getName()));
     }
 
-    /**
-     * 📋 Candidate ට තමන්ගේ Booking History එක (Dashboard එකේ පෙන්වන්න) බලාගැනීමට
-     */
     @GetMapping("/candidate/{id}")
     public ResponseEntity<List<BookingDTO>> getForCandidate(@PathVariable("id") Long id) { // 🎯 මෙතන ("id") කියලා අනිවාර්යයෙන්ම දාන්න
         return ResponseEntity.ok(bookingService.getBookingsByCandidate(id));
