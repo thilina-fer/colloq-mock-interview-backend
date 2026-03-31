@@ -1,72 +1,74 @@
 package lk.ijse.springbootbackend.service.impl;
 
 import lk.ijse.springbootbackend.dto.PaymentDto;
-import lk.ijse.springbootbackend.entity.BookingStatus;
 import lk.ijse.springbootbackend.entity.Bookings;
+import lk.ijse.springbootbackend.entity.Interviewer;
 import lk.ijse.springbootbackend.entity.Payments;
 import lk.ijse.springbootbackend.repo.BookingRepo;
+import lk.ijse.springbootbackend.repo.InterviewerRepo;
 import lk.ijse.springbootbackend.repo.PaymentRepo;
 import lk.ijse.springbootbackend.service.PaymentService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
+import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
+@Transactional // 🎯 Atomic transaction එකක් විදිහට වැඩ කිරීමට (Critical for payments)
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepo paymentRepo;
     private final BookingRepo bookingRepo;
-    private final GoogleCalendarService googleCalendarService;
-
-    // 💡 Lombok අවුල් එන්නේ නැති වෙන්න අපිම හදපු Constructor එක
-    public PaymentServiceImpl(PaymentRepo paymentRepo, BookingRepo bookingRepo, GoogleCalendarService googleCalendarService) {
-        this.paymentRepo = paymentRepo;
-        this.bookingRepo = bookingRepo;
-        this.googleCalendarService = googleCalendarService;
-    }
+    private final InterviewerRepo interviewerRepo;
 
     @Override
     public String processPayment(PaymentDto paymentDto) {
 
-        // 1. Booking එක Database එකෙන් හොයාගන්නවා
+        // 1. අදාළ Booking එක පරීක්ෂා කිරීම
         Bookings booking = bookingRepo.findById(paymentDto.getBookingId())
-                .orElseThrow(() -> new RuntimeException("Booking not found!"));
+                .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + paymentDto.getBookingId()));
 
-        try {
-            // 2. Booking එකේ තියෙන දවස සහ වෙලාව Google Meet එකට තේරෙන විදිහට හදාගන්නවා
-            LocalDateTime startDateTime = LocalDateTime.of(booking.getAvailability().getDate(), booking.getAvailability().getStartTime());
-            LocalDateTime endDateTime = LocalDateTime.of(booking.getAvailability().getDate(), booking.getAvailability().getEndTime());
-
-            Date startDate = Date.from(startDateTime.atZone(ZoneId.of("Asia/Colombo")).toInstant());
-            Date endDate = Date.from(endDateTime.atZone(ZoneId.of("Asia/Colombo")).toInstant());
-
-            // 3. Meet Link එක හදනවා
-            String title = "ColloQ Interview";
-            String description = "Mock Interview Session.";
-            String meetLink = googleCalendarService.createMeetLink(title, description, startDate, endDate);
-
-            // 💡 අලුතින් එකතු කළ කොටස: Booking එකට Link එක දාලා DB එකේ Update කරනවා
-            booking.setMeetingLink(meetLink);
-            booking.setStatus(BookingStatus.BOOKED); // Booking එක Confirm කරනවා
-            bookingRepo.save(booking);
-
-            // 4. Payment එක Database එකේ Save කරනවා
-            Payments payment = new Payments();
-            payment.setAmount(paymentDto.getAmount());
-            payment.setPaymentMethod(paymentDto.getPaymentMethod());
-            payment.setTransactionId(paymentDto.getTransactionId());
-            payment.setStatus("SUCCESS");
-            payment.setPaymentDate(LocalDateTime.now());
-            payment.setBookings(booking);
-            paymentRepo.save(payment);
-
-            return "Payment Successful! Meet Link: " + meetLink;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Payment processed, but failed to generate Meet Link: " + e.getMessage();
+        if (booking.isPaid()) {
+            throw new RuntimeException("This session has already been paid for.");
         }
+
+        // 2. Payment Record එක නිර්මාණය කර Save කිරීම
+        Payments payment = new Payments();
+        payment.setAmount(paymentDto.getAmount());
+        payment.setPaymentMethod(paymentDto.getPaymentMethod());
+
+        // Mock Transaction ID එකක් generate කිරීම
+        String txnId = "TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        payment.setTransactionId(txnId);
+
+        payment.setStatus("SUCCESS");
+        payment.setPaymentDate(LocalDateTime.now());
+        payment.setBookings(booking);
+
+        paymentRepo.save(payment);
+
+        // 3. Booking එක Update කිරීම (Paid status & Meeting Link)
+        booking.setPaid(true);
+
+        // Mock Meeting Link එකක් ලබා දීම
+        String mockLink = "https://meet.google.com/colloq-" + UUID.randomUUID().toString().substring(0, 4) + "-" + UUID.randomUUID().toString().substring(0, 4);
+        booking.setMeetingLink(mockLink);
+
+        bookingRepo.save(booking);
+
+        // 4. 🎯 Interviewer ගේ Wallet එකට මුදල එකතු කිරීම
+        Interviewer interviewer = booking.getInterviewer();
+        if (interviewer != null) {
+            Double currentBalance = interviewer.getWalletBalance() != null ? interviewer.getWalletBalance() : 0.0;
+            interviewer.setWalletBalance(currentBalance + paymentDto.getAmount());
+            interviewerRepo.save(interviewer);
+        } else {
+            throw new RuntimeException("Interviewer not found for this booking.");
+        }
+
+        return "Payment processed successfully. Transaction ID: " + txnId;
     }
 }

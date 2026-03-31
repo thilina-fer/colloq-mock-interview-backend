@@ -2,29 +2,30 @@ package lk.ijse.springbootbackend.controller;
 
 import lk.ijse.springbootbackend.dto.PaymentDto;
 import lk.ijse.springbootbackend.service.PaymentService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
+
 @RestController
 @RequestMapping("/api/v1/payments")
-@CrossOrigin("http://localhost:5173")
+@RequiredArgsConstructor
+@CrossOrigin("http://localhost:5173") // 🎯 Frontend URL එකට අවසර දීම
 public class PaymentController {
 
     private final PaymentService paymentService;
 
-    public PaymentController(PaymentService paymentService) {
-        this.paymentService = paymentService;
-    }
-
-    // 🚀 දැන් අනිවාර්යයෙන්ම Postman එකෙනුත්, Frontend එකෙනුත් මේකට වැඩ කරනවා!
     @PostMapping("/checkout")
-    public ResponseEntity<String> makePayment(@RequestBody PaymentDto paymentDto) {
+    public ResponseEntity<String> makePayment(@RequestBody PaymentDto paymentDto, Principal principal) {
         try {
+            // 🎯 Principal එකෙන් ලොග් වුණු User ගේ නම ගන්න පුළුවන් (Logged in Candidate)
+            // දැනට අපි කෙලින්ම service එකට paymentDto එක යවනවා
             String result = paymentService.processPayment(paymentDto);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error processing payment: " + e.getMessage());
+            // මොකක් හරි වැරදුණොත් Error message එකක් යවනවා
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }
