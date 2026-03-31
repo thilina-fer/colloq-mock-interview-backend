@@ -14,16 +14,19 @@ public class BookingDTO {
     private String candidateNote;
     private BookingStatus status;
 
-    // IDs (Request එක එවද්දී ඕනේ වෙනවා)
     private Long availabilityId;
     private Long interviewerId;
     private Long levelId;
 
-    // UI Display Fields (Response එකේදී Frontend එකට පෙන්වන්න)
     private String interviewerName;
     private String interviewerProfilePic;
-    private String date;         // Availability එකෙන් එන දවස
-    private String startTime;    // Availability එකෙන් එන වෙලාව
+    private String date;
+    private String startTime;
     private String endTime;
-    private String levelName;    // "Junior", "Senior" වගේ
+    private String levelName;
+
+    private String candidateName;
+    private String candidateProfilePic;
+    private String candidateGithub;
+    private String candidateLinkedin;
 }
