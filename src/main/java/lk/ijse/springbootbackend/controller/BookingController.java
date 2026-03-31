@@ -54,6 +54,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -99,9 +100,11 @@ public class BookingController {
     /**
      * 📊 Interviewer ට තමන්ට ලැබුණු Pending Requests බලාගැනීමට
      */
-    @GetMapping("/interviewer/{id}")
-    public ResponseEntity<List<BookingDTO>> getForInterviewer(@PathVariable Long id) {
-        return ResponseEntity.ok(bookingService.getBookingsByInterviewer(id));
+    // ❌ පරණ වැරදි එක අයින් කරලා මේක දාන්න
+    @GetMapping("/interviewer/my-requests")
+    public ResponseEntity<List<BookingDTO>> getForInterviewer(Principal principal) {
+        // principal.getName() එකෙන් ලොග් වෙලා ඉන්න Interviewer ගේ Username එක Service එකට යනවා
+        return ResponseEntity.ok(bookingService.getBookingsByInterviewer(principal.getName()));
     }
 
     /**

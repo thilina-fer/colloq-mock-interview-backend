@@ -281,14 +281,24 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingDTO> getBookingsByInterviewer(Long interviewerId) {
-        // Interviewer ට තමන්ගේ Pending Requests විතරක් පෙන්වීමට
-        return bookingRepo.findByInterviewer_InterviewerIdAndStatus(interviewerId, BookingStatus.PENDING_APPROVAL)
+    public List<BookingDTO> getBookingsByInterviewer(String username) { // 🎯 Long id වෙනුවට String username ගත්තා
+
+        // 1. [FIX]: Token එකෙන් එන Username එක හරහා Interviewer ව හොයාගන්න
+        Auth auth = authRepo.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Auth user not found"));
+
+        Interviewer interviewer = interviewerRepo.findByAuth(auth)
+                .orElseThrow(() -> new RuntimeException("Interviewer profile not found"));
+
+        // 2. දැන් අදාළ Interviewer ID එක සහ PENDING_APPROVAL status එකට filter කරනවා
+        return bookingRepo.findByInterviewer_InterviewerIdAndStatus(
+                        interviewer.getInterviewerId(),
+                        BookingStatus.PENDING_APPROVAL
+                )
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
-
     // BookingServiceImpl.java
     @Override
     public List<BookingDTO> getBookingsByCandidate(Long candidateId) {
