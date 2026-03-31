@@ -11,4 +11,5 @@ public interface InterviewerRepo extends JpaRepository<Interviewer, Long> {
         boolean existsByAuth(Auth auth);
         Optional<Interviewer> findByAuth(Auth auth);
         List<Interviewer> findByStatus(String status);
+        Optional<Interviewer> findByAuth_Username(String username);
 }
