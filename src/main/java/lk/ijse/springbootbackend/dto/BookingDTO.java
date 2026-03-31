@@ -29,4 +29,7 @@ public class BookingDTO {
     private String candidateProfilePic;
     private String candidateGithub;
     private String candidateLinkedin;
+
+    private boolean paid;
+    private String meetingLink;
 }
