@@ -7,6 +7,6 @@ public interface BookingService {
     String hireInterviewer(BookingDTO dto); // මුලින්ම Hire කරන අවස්ථාව
     String approveBooking(Long bookingId);  // Interviewer Approve කරන අවස්ථාව
     String rejectBooking(Long bookingId);   // Interviewer Reject කරන අවස්ථාව
-    List<BookingDTO> getBookingsByInterviewer(Long interviewerId);
+    public List<BookingDTO> getBookingsByInterviewer(String username);
     List<BookingDTO> getBookingsByCandidate(Long candidateId);
 }
