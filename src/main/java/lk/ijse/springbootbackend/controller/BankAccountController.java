@@ -4,35 +4,37 @@ import lk.ijse.springbootbackend.dto.BankAccountDTO;
 import lk.ijse.springbootbackend.service.BankAccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/bank-account")
 @RequiredArgsConstructor
-@CrossOrigin
+@CrossOrigin(origins = "http://localhost:5173")
 public class BankAccountController {
 
     private final BankAccountService bankAccountService;
 
-    @PostMapping("/save")
-    public ResponseEntity<String> save(@RequestBody BankAccountDTO dto) {
-        return ResponseEntity.ok(bankAccountService.saveBankAccount(dto));
+    @PostMapping("/save-account")
+    public ResponseEntity<String> linkAccount(@RequestBody BankAccountDTO dto, Authentication authentication) {
+        String response = bankAccountService.saveBankAccount(dto, authentication.getName());
+        return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/interviewer/{id}")
-    public ResponseEntity<List<BankAccountDTO>> getByInterviewer(@PathVariable Long id) {
-        return ResponseEntity.ok(bankAccountService.getAccountsByInterviewer(id));
+    @GetMapping("/my-account")
+    public ResponseEntity<BankAccountDTO> getMyAccount(Authentication authentication) {
+        return ResponseEntity.ok(bankAccountService.getMyBankAccount(authentication.getName()));
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<String> update(@PathVariable Long id, @RequestBody BankAccountDTO dto) {
-        return ResponseEntity.ok(bankAccountService.updateBankAccount(id, dto));
+    @PutMapping("/update-account")
+    public ResponseEntity<String> updateAccount(@RequestBody BankAccountDTO dto, Authentication authentication) {
+        String response = bankAccountService.updateBankAccount(dto, authentication.getName());
+        return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> delete(@PathVariable Long id) {
-        return ResponseEntity.ok(bankAccountService.deleteBankAccount(id));
+    @DeleteMapping("/remove-account")
+    public ResponseEntity<String> deleteAccount(Authentication authentication) {
+        String response = bankAccountService.deleteMyBankAccount(authentication.getName());
+        return ResponseEntity.ok(response);
     }
 }

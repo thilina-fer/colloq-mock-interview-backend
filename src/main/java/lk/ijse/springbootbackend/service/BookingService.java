@@ -1,12 +1,16 @@
 package lk.ijse.springbootbackend.service;
 
 import lk.ijse.springbootbackend.dto.BookingDTO;
+import lk.ijse.springbootbackend.entity.BookingStatus;
+
 import java.util.List;
 
 public interface BookingService {
-    String hireInterviewer(BookingDTO dto); // මුලින්ම Hire කරන අවස්ථාව
-    String approveBooking(Long bookingId);  // Interviewer Approve කරන අවස්ථාව
-    String rejectBooking(Long bookingId);   // Interviewer Reject කරන අවස්ථාව
-    List<BookingDTO> getBookingsByInterviewer(Long interviewerId);
+    String hireInterviewer(BookingDTO dto);
+    String updateBookingStatus(Long bookingId, BookingStatus status);
+    String rejectBooking(Long bookingId);
+    public List<BookingDTO> getBookingsByInterviewer(String username);
     List<BookingDTO> getBookingsByCandidate(Long candidateId);
+    List<BookingDTO> getApprovedBookingsForInterviewer(String username);
+    List<BookingDTO> getBookingsForCandidate(String username);
 }

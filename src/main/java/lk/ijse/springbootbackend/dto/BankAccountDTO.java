@@ -8,10 +8,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class BankAccountDTO {
-    private Long bankAccountId;
+    private String accountName;
     private String bankName;
+    private String branchName;
     private String accountNumber;
-    private Boolean isDefault;
     private String status;
-    private Long interviewerId;
 }

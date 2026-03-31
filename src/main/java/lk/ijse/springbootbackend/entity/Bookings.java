@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "bookings")
+@Table
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -25,6 +25,8 @@ public class Bookings {
     private String meetingLink;
 
     private String googleCalendarEventId;
+
+    private boolean paid;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 

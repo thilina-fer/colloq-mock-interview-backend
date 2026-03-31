@@ -3,17 +3,19 @@ package lk.ijse.springbootbackend.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDate;
-import java.time.LocalTime;
 
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
 public class InterviewerAvailabilityDTO {
     private Long availabilityId;
-    private LocalDate date;
-    private LocalTime startTime;
-    private LocalTime endTime;
+
+    // 💡 LocalDate සහ LocalTime වෙනුවට String පාවිච්චි කරමු
+    // එවිට Backend mapping වලදී null වැටෙන එක වළක්වා ගත හැකියි
+    private String date;
+    private String startTime;
+    private String endTime;
+
     private boolean isBooked;
     private Long interviewerId;
 }
