@@ -198,7 +198,8 @@ public class SecurityConfig {
 
                         // 🎯 3. Booking Endpoints (අලුතින් එකතු කළා)
                         // ඕනෑම ලොග් වුණු user කෙනෙක්ට (Candidate/Interviewer) booking කරන්න සහ බලන්න අවසර දෙනවා
-                        .requestMatchers("/api/v1/bookings/**").authenticated()
+//                        .requestMatchers("/api/v1/bookings/**").authenticated()
+                                .requestMatchers("/api/v1/bookings/**", "/api/v1/booking/**").authenticated()
 
                         // 4. Admin Specific
                         .requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN")
