@@ -214,6 +214,7 @@ public class SecurityConfig {
 
                         // 7. Candidate Endpoints
                         .requestMatchers("/api/v1/candidate/**").hasAnyAuthority("CANDIDATE", "ADMIN")
+                                .requestMatchers("/api/v1/payments/**").authenticated()
 
                         .anyRequest().authenticated()
                 )
