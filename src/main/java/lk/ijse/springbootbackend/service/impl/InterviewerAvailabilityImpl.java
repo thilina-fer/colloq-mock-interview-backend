@@ -1,8 +1,10 @@
 package lk.ijse.springbootbackend.service.impl;
 
 import lk.ijse.springbootbackend.dto.InterviewerAvailabilityDTO;
+import lk.ijse.springbootbackend.entity.Auth;
 import lk.ijse.springbootbackend.entity.Interviewer;
 import lk.ijse.springbootbackend.entity.InterviewerAvailability;
+import lk.ijse.springbootbackend.repo.AuthRepo;
 import lk.ijse.springbootbackend.repo.InterviewerAvailabilityRepo;
 import lk.ijse.springbootbackend.repo.InterviewerRepo;
 import lk.ijse.springbootbackend.service.InterviewerAvailabilityService;
@@ -27,32 +29,36 @@ public class InterviewerAvailabilityImpl implements InterviewerAvailabilityServi
     private final InterviewerAvailabilityRepo availabilityRepo;
     private final InterviewerRepo interviewerRepo;
     private final ModelMapper modelMapper;
+    private final AuthRepo authRepo;
 
     @Override
     @Transactional
-    public String saveAvailabilityBatch(List<InterviewerAvailabilityDTO> dtos) {
+    public String saveAvailabilityBatch(List<InterviewerAvailabilityDTO> dtos, String username) { // 🎯 Username එක parameter එකක් විදිහට ගන්න
         if (dtos.isEmpty()) return "No slots to save";
 
-        // 1. Interviewer ඉන්නවාද කියලා බලනවා (පළමු DTO එකේ ID එකෙන්)
-        Interviewer interviewer = interviewerRepo.findById(dtos.get(0).getInterviewerId())
-                .orElseThrow(() -> new RuntimeException("Interviewer not found"));
+        // 1. [FIX]: Frontend එකෙන් එවන ID එක වෙනුවට Token එකේ ඉන්න User හරහා Interviewer ව හොයාගන්න
+        Auth auth = authRepo.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Auth user not found"));
 
-        // 2. Frontend එකෙන් එන "09:00 AM" format එකට ගැලපෙන Formatter එක
+        Interviewer interviewer = interviewerRepo.findByAuth(auth)
+                .orElseThrow(() -> new RuntimeException("Interviewer profile not found"));
+
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH);
 
         try {
             List<InterviewerAvailability> entities = dtos.stream().map(dto -> {
                 InterviewerAvailability availability = new InterviewerAvailability();
 
-                // 💡 String -> LocalDate (Standard "YYYY-MM-DD" format)
+                // String -> LocalDate
                 availability.setDate(LocalDate.parse(dto.getDate()));
 
-                // 💡 String -> LocalTime ("09:00 AM" -> LocalTime object)
+                // String -> LocalTime
                 availability.setStartTime(LocalTime.parse(dto.getStartTime(), timeFormatter));
                 availability.setEndTime(LocalTime.parse(dto.getEndTime(), timeFormatter));
 
+                // 🎯 මෙතන දැන් නිවැරදි Interviewer (Amal ද Kamal ද කියලා) set වෙනවා
                 availability.setInterviewer(interviewer);
-                availability.setBooked(false); // අලුත් ඒව හැමතිස්සෙම Available
+                availability.setBooked(false);
 
                 return availability;
             }).collect(Collectors.toList());
@@ -66,21 +72,29 @@ public class InterviewerAvailabilityImpl implements InterviewerAvailabilityServi
     }
 
     @Override
-    public List<InterviewerAvailabilityDTO> getAllAvailabilities() {
+    public List<InterviewerAvailabilityDTO> getAllAvailabilities(String username) { // 🎯 Username එක parameter එකක් විදිහට ගත්තා
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH);
-        Long currentInterviewerId = 1L;
+
+        // 1. [FIX]: Token එකෙන් එන Username එක හරහා ලොග් වෙලා ඉන්න Interviewer ව හොයාගන්න
+        Auth auth = authRepo.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Auth user not found"));
+
+        Interviewer interviewer = interviewerRepo.findByAuth(auth)
+                .orElseThrow(() -> new RuntimeException("Interviewer profile not found"));
+
+        Long currentInterviewerId = interviewer.getInterviewerId(); // 🎯 දැන් මේක Dynamic (1, 2, 3...)
 
         return availabilityRepo.findByInterviewer_InterviewerId(currentInterviewerId).stream()
                 .map(s -> {
                     InterviewerAvailabilityDTO dto = new InterviewerAvailabilityDTO();
                     dto.setAvailabilityId(s.getAvailabilityId());
 
-                    // ✅ Entity (LocalDate) -> DTO (String) බවට හරවනවා
+                    // ✅ Entity (LocalDate) -> DTO (String)
                     if (s.getDate() != null) {
                         dto.setDate(s.getDate().toString());
                     }
 
-                    // ✅ Entity (LocalTime) -> DTO (String) බවට හරවනවා
+                    // ✅ Entity (LocalTime) -> DTO (String) "09:00 AM" format එකට
                     if (s.getStartTime() != null) {
                         dto.setStartTime(s.getStartTime().format(timeFormatter));
                     }

@@ -27,4 +27,6 @@ public class InterviewerAvailability {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private Interviewer interviewer;
+
+
 }
