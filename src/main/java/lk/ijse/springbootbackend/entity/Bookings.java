@@ -26,6 +26,8 @@ public class Bookings {
 
     private String googleCalendarEventId;
 
+    private boolean paid;
+
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Enumerated(EnumType.STRING)

@@ -23,6 +23,8 @@ public class Interviewer {
     private String linkedinUrl;
     private String profilePicture;
     private String status;
+    @Column(columnDefinition = "DOUBLE DEFAULT 0.0")
+    private Double walletBalance = 0.0;
 
     @OneToOne(fetch = FetchType.EAGER) // 💡 Eager load කරන්න ෂුවර් වෙන්න
     @JoinColumn(name = "authId")
