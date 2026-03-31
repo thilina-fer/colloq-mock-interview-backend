@@ -1,287 +1,3 @@
-//package lk.ijse.springbootbackend.service.impl;
-//
-//import com.cloudinary.Cloudinary;
-//import com.cloudinary.utils.ObjectUtils;
-//import lk.ijse.springbootbackend.dto.auth.CompleteInterviewerProfileDTO;
-//import lk.ijse.springbootbackend.dto.InterviewerResponseDTO;
-//import lk.ijse.springbootbackend.entity.Auth;
-//import lk.ijse.springbootbackend.entity.Interviewer;
-//import lk.ijse.springbootbackend.repo.AuthRepo;
-//import lk.ijse.springbootbackend.repo.InterviewerRepo;
-//import lk.ijse.springbootbackend.service.InterviewerService;
-//import lombok.RequiredArgsConstructor;
-//import org.modelmapper.ModelMapper;
-//import org.springframework.stereotype.Service;
-//import org.springframework.transaction.annotation.Transactional;
-//import org.springframework.web.multipart.MultipartFile;
-//
-//import java.util.ArrayList;
-//import java.util.List;
-//import java.util.Map;
-//import java.util.stream.Collectors;
-//
-//@Service
-//@RequiredArgsConstructor
-//public class InterviewerServiceImpl implements InterviewerService {
-//
-//    private final InterviewerRepo interviewerRepo;
-//    private final AuthRepo authRepo;
-//    private final Cloudinary cloudinary;
-//    private final ModelMapper modelMapper;
-//
-//    @Override
-//    @Transactional
-//    public String completeInterviewerProfile(CompleteInterviewerProfileDTO dto, MultipartFile imageFile, String username) {
-//        Auth auth = authRepo.findByUsername(username)
-//                .or(() -> authRepo.findByEmail(username))
-//                .orElseThrow(() -> new RuntimeException("Auth user not found"));
-//
-//        if (interviewerRepo.existsByAuth(auth)) {
-//            throw new RuntimeException("Interviewer profile already exists");
-//        }
-//
-//        Interviewer interviewer = new Interviewer();
-//        interviewer.setAuth(auth);
-//        interviewer.setBio(dto.getBio());
-//        interviewer.setCompany(dto.getCompany());
-//        interviewer.setDesignation(dto.getDesignation());
-//        interviewer.setExperienceYears(dto.getExperienceYears());
-//        interviewer.setSpecialization(dto.getSpecialization());
-//        interviewer.setGithubUrl(dto.getGithubUrl());
-//        interviewer.setLinkedinUrl(dto.getLinkedinUrl());
-//        interviewer.setStatus(dto.getStatus());
-//
-//        try {
-//            if (imageFile != null && !imageFile.isEmpty()) {
-//                Map uploadResult = cloudinary.uploader().upload(imageFile.getBytes(),
-//                        ObjectUtils.asMap("folder", "colloq_profiles/interviewers"));
-//
-//                String imageUrl = uploadResult.get("url").toString();
-//                interviewer.setProfilePicture(imageUrl);
-//                auth.setProfilePic(imageUrl);
-//
-//            } else {
-//                interviewer.setProfilePicture(dto.getProfilePicture());
-//                if (dto.getProfilePicture() != null) {
-//                    auth.setProfilePic(dto.getProfilePicture());
-//                }
-//            }
-//        } catch (Exception e) {
-//            throw new RuntimeException("Failed to upload image: " + e.getMessage());
-//        }
-//
-//        interviewerRepo.save(interviewer);
-//        authRepo.save(auth);
-//
-//        return "Interviewer profile completed successfully";
-//    }
-//
-//
-//    @Override
-//    public InterviewerResponseDTO getInterviewerProfile(String username) {
-//        Auth auth = authRepo.findByUsername(username)
-//                .orElseThrow(() -> new RuntimeException("Auth user not found"));
-//
-//        Interviewer interviewer = interviewerRepo.findByAuth(auth)
-//                .orElseThrow(() -> new RuntimeException("Interviewer profile not found"));
-//
-//        return mapToDTO(interviewer);
-//    }
-//
-//    // InterviewerServiceImpl.java
-//
-//    @Override
-//    @Transactional // 💡 අනිවාර්යයෙන්ම Transactional දාන්න Table දෙකක් Update කරන නිසා
-//    public String updateInterviewerProfile(CompleteInterviewerProfileDTO dto, MultipartFile imageFile, String username) {
-//
-//        // 1. කලින් ඉන්න Auth user සහ Interviewer profile එක හොයාගන්න
-//        // Username හෝ Email දෙකෙන්ම හොයන්න ඉඩ දෙමු
-//        Auth auth = authRepo.findByUsername(username)
-//                .or(() -> authRepo.findByEmail(username))
-//                .orElseThrow(() -> new RuntimeException("Auth user not found"));
-//
-//        Interviewer interviewer = interviewerRepo.findByAuth(auth)
-//                .orElseThrow(() -> new RuntimeException("Interviewer profile not found"));
-//
-//        // 2. මූලික විස්තර Update කිරීම
-//        interviewer.setBio(dto.getBio());
-//        interviewer.setCompany(dto.getCompany());
-//        interviewer.setDesignation(dto.getDesignation());
-//        interviewer.setExperienceYears(dto.getExperienceYears());
-//        interviewer.setSpecialization(dto.getSpecialization());
-//        interviewer.setGithubUrl(dto.getGithubUrl());
-//        interviewer.setLinkedinUrl(dto.getLinkedinUrl());
-//
-//        // 3. Image එකක් එවලා තියෙනවා නම් Cloudinary එකට Upload කිරීම
-//        try {
-//            if (imageFile != null && !imageFile.isEmpty()) {
-//                Map uploadResult = cloudinary.uploader().upload(imageFile.getBytes(),
-//                        ObjectUtils.asMap("folder", "colloq_profiles/interviewers"));
-//
-//                String imageUrl = uploadResult.get("url").toString();
-//
-//                // ✅ Interviewer Table එක Update කිරීම
-//                interviewer.setProfilePicture(imageUrl);
-//
-//                // ✅ Auth Table එක Update කිරීම (Header එකේ පේන්න)
-//                auth.setProfilePic(imageUrl);
-//
-//            } else if (dto.getProfilePicture() != null) {
-//                // Image එකක් එවලා නැත්නම්, DTO එකේ තියෙන URL එකම තියාගන්න
-//                interviewer.setProfilePicture(dto.getProfilePicture());
-//                auth.setProfilePic(dto.getProfilePicture());
-//            }
-//        } catch (Exception e) {
-//            throw new RuntimeException("Failed to update profile picture: " + e.getMessage());
-//        }
-//
-//        // 4. දෙකම Save කිරීම
-//        interviewerRepo.save(interviewer);
-//        authRepo.save(auth);
-//
-//        return "Interviewer profile updated successfully";
-//    }
-//
-//
-//    @Override
-//    public String deleteInterviewerProfile(Long interviewerId, String username) {
-//        Interviewer interviewer = interviewerRepo.findById(interviewerId)
-//                .orElseThrow(() -> new RuntimeException("Interviewer not found"));
-//
-//        interviewerRepo.delete(interviewer);
-//        return "Interviewer profile deleted successfully";
-//    }
-//
-////    @Override
-////    public List<InterviewerResponseDTO> getAllInterviewers() {
-////        System.out.println("DEBUG: Fetching all interviewers from DB..."); // Debug log
-////        return interviewerRepo.findAll()
-////                .stream()
-////                .map(this::mapToDTO)
-////                .collect(Collectors.toList());
-////    }
-//
-//    @Override
-//    public List<InterviewerResponseDTO> getAllInterviewers() {
-//        return interviewerRepo.findAll().stream().map(interviewer -> {
-//            InterviewerResponseDTO dto = modelMapper.map(interviewer, InterviewerResponseDTO.class);
-//
-//            // 🎯 මෙන්න මෙතනදී තමයි ලෙවල් එකේ මිල ඉන්ටර්වීවර්ට ලැබෙන්නේ
-//            if (interviewer.getLevel() != null) {
-//                dto.setPrice(interviewer.getLevel().getPrice());
-//                dto.setLevelName(interviewer.getLevel().getName());
-//            }
-//
-//            return dto;
-//        }).collect(Collectors.toList());
-//    }
-//
-//    private InterviewerResponseDTO mapToDTO(Interviewer interviewer) {
-//        InterviewerResponseDTO dto = new InterviewerResponseDTO();
-//
-//        dto.setInterviewerId(interviewer.getInterviewerId());
-//
-//        // Auth Check
-//        if (interviewer.getAuth() != null) {
-//            dto.setUsername(interviewer.getAuth().getUsername());
-//            dto.setEmail(interviewer.getAuth().getEmail());
-//        } else {
-//            dto.setUsername("N/A");
-//            dto.setEmail("N/A");
-//        }
-//
-//        dto.setBio(interviewer.getBio() != null ? interviewer.getBio() : "");
-//        dto.setCompany(interviewer.getCompany() != null ? interviewer.getCompany() : "");
-//        dto.setDesignation(interviewer.getDesignation() != null ? interviewer.getDesignation() : "");
-//
-//        // 💡 Integer Handle
-//        dto.setExperienceYears(interviewer.getExperienceYears() != null ? interviewer.getExperienceYears() : 0);
-//
-//        dto.setSpecialization(interviewer.getSpecialization() != null ? interviewer.getSpecialization() : "");
-//        dto.setGithubUrl(interviewer.getGithubUrl() != null ? interviewer.getGithubUrl() : "");
-//        dto.setLinkedinUrl(interviewer.getLinkedinUrl() != null ? interviewer.getLinkedinUrl() : "");
-//        dto.setProfilePicture(interviewer.getProfilePicture() != null ? interviewer.getProfilePicture() : "");
-//        dto.setStatus(interviewer.getStatus() != null ? interviewer.getStatus() : "PENDING");
-//
-//        // 💡 joinSDate එක Date එකක් නම් String එකකට convert කරන්න
-//        if (interviewer.getJoinSDate() != null) {
-//            dto.setJoinSDate(interviewer.getJoinSDate().toString());
-//        } else {
-//            dto.setJoinSDate("");
-//        }
-//
-//        return dto;
-//    }
-//
-//    /*@Override
-//    public List<InterviewerResponseDTO> getPendingInterviewers() {
-//        System.out.println("DEBUG: Method started..."); // මේක වැටෙන්නම ඕනේ
-//
-//        List<Interviewer> all = interviewerRepo.findAll();
-//        System.out.println("DEBUG: Total interviewers found in DB: " + all.size());
-//
-//        // 💡 මෙතනදී status එක print කරලා බලමු DB එකේ තියෙන විදිහ
-//        for (Interviewer i : all) {
-//            System.out.println("ID: " + i.getInterviewerId() + " | Status in DB: [" + i.getStatus() + "]");
-//        }
-//
-//        List<Interviewer> pending = all.stream()
-//                .filter(i -> i.getStatus() != null && i.getStatus().trim().equalsIgnoreCase("PENDING"))
-//                .collect(Collectors.toList());
-//
-//        System.out.println("DEBUG: Filtered Pending Count: " + pending.size());
-//
-//        return pending.stream().map(this::mapToDTO).collect(Collectors.toList());
-//    }
-//*/
-//    @Override
-//    public List<InterviewerResponseDTO> getPendingInterviewers() {
-//        System.out.println("🚀 [DEBUG] Fetching real data from DB...");
-//
-//        // 1. Repo එකෙන් ඔක්කොම අරන් Filter කරන එක වඩා ආරක්ෂිතයි දැනට
-//        List<Interviewer> all = interviewerRepo.findAll();
-//
-//        return all.stream()
-//                .filter(i -> i.getStatus() != null && i.getStatus().trim().equalsIgnoreCase("PENDING"))
-//                .map(this::mapToDTO)
-//                .collect(Collectors.toList());
-//    }
-//
-//    @Override
-//    @Transactional
-//    public InterviewerResponseDTO approveInterviewer(Long interviewerId) {
-//        // 1. Interviewer ව හොයාගන්න
-//        Interviewer interviewer = interviewerRepo.findById(interviewerId)
-//                .orElseThrow(() -> new RuntimeException("Interviewer not found with ID: " + interviewerId));
-//
-//        // 2. Interviewer status එක ACTIVE කරන්න
-//        interviewer.setStatus("ACTIVE");
-//
-//        // 💡 3. වැදගත්ම දේ: Auth record එකත් ACTIVE කරන්න (Login වීමට අවශ්‍යයි)
-//        if (interviewer.getAuth() != null) {
-//            interviewer.getAuth().setStatus("ACTIVE");
-//            // සාමාන්‍යයෙන් Cascade දාලා නැත්නම් මෙහෙම save කරන්න ඕනේ
-//            authRepo.save(interviewer.getAuth());
-//        }
-//
-//        Interviewer savedInterviewer = interviewerRepo.save(interviewer);
-//
-//        // 4. Update වුණු දත්ත DTO එකක් ලෙස ආපහු යවන්න
-//        return mapToDTO(savedInterviewer);
-//    }
-//    // InterviewerServiceImpl.java එකේ
-//    @Override
-//    @Transactional
-//    public String rejectInterviewer(Long interviewerId) {
-//        if (!interviewerRepo.existsById(interviewerId)) {
-//            throw new RuntimeException("Interviewer not found");
-//        }
-//        interviewerRepo.deleteById(interviewerId); // 💡 DB එකෙන් අයින් කරනවා
-//        return "Interviewer application rejected and removed successfully";
-//    }
-//}
-
-
 package lk.ijse.springbootbackend.service.impl;
 
 import com.cloudinary.Cloudinary;
@@ -445,6 +161,33 @@ public class InterviewerServiceImpl implements InterviewerService {
                 .collect(Collectors.toList());
     }
 
+//    private InterviewerResponseDTO mapToDTO(Interviewer interviewer) {
+//        InterviewerResponseDTO dto = new InterviewerResponseDTO();
+//
+//        // Interviewer basic fields
+//        dto.setInterviewerId(interviewer.getInterviewerId());
+//        dto.setBio(interviewer.getBio());
+//        dto.setCompany(interviewer.getCompany());
+//        dto.setExperienceYears(interviewer.getExperienceYears());
+//        dto.setSpecialization(interviewer.getSpecialization());
+//        dto.setStatus(interviewer.getStatus());
+//        dto.setProfilePicture(interviewer.getProfilePicture());
+//
+//        // 🎯 Auth table එකෙන් Username එක ගන්නවා
+//        if (interviewer.getAuth() != null) {
+//            dto.setUsername(interviewer.getAuth().getUsername());
+//        }
+//
+//        // 🎯 Level table එකෙන් නම සහ Price එක ගන්නවා
+//        if (interviewer.getLevel() != null) {
+//            dto.setLevelName(interviewer.getLevel().getName());
+//            dto.setPrice(interviewer.getLevel().getPrice());
+//            dto.setLevelId(interviewer.getLevel().getLevelId());
+//        }
+//
+//        return dto;
+//    }
+
     private InterviewerResponseDTO mapToDTO(Interviewer interviewer) {
         InterviewerResponseDTO dto = new InterviewerResponseDTO();
 
@@ -457,12 +200,17 @@ public class InterviewerServiceImpl implements InterviewerService {
         dto.setStatus(interviewer.getStatus());
         dto.setProfilePicture(interviewer.getProfilePicture());
 
-        // 🎯 Auth table එකෙන් Username එක ගන්නවා
+        // 🎯 [NEW UPDATE]: Wallet Balance එක DTO එකට Set කිරීම
+        dto.setWalletBalance(interviewer.getWalletBalance());
+
+        // Auth table එකෙන් Username එක ගන්නවා
         if (interviewer.getAuth() != null) {
             dto.setUsername(interviewer.getAuth().getUsername());
+            // අවැසි නම් Email එකත් මෙතනින්ම set කරන්න පුළුවන්
+            dto.setEmail(interviewer.getAuth().getEmail());
         }
 
-        // 🎯 Level table එකෙන් නම සහ Price එක ගන්නවා
+        // Level table එකෙන් නම සහ Price එක ගන්නවා
         if (interviewer.getLevel() != null) {
             dto.setLevelName(interviewer.getLevel().getName());
             dto.setPrice(interviewer.getLevel().getPrice());

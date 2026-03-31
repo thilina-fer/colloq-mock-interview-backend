@@ -30,6 +30,5 @@ public class InterviewerResponseDTO {
     private Double price;
     private String levelName;
 
-
-
+    private Double walletBalance;
 }
