@@ -9,11 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface BankAccountRepo extends JpaRepository<BankAccount, Long> {
-
-    // Interviewer object එක හරහා අදාළ බැංකු ගිණුම සෙවීමට
     Optional<BankAccount> findByInterviewer(Interviewer interviewer);
-
-    // Interviewer ට දැනටමත් ගිණුමක් තිබේදැයි බැලීමට (Boolean return කරයි)
     boolean existsByInterviewer(Interviewer interviewer);
 
 }

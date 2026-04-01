@@ -3,14 +3,14 @@ package lk.ijse.springbootbackend.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PaymentDto {
+public class SystemProfitDTO {
+    private Long profitId;
     private Double amount;
-    private String paymentMethod;
-    private String transactionId;
+    private LocalDateTime receivedDate;
     private Long bookingId;
-    private String status;
 }

@@ -23,17 +23,17 @@ public class Interviewer {
     private String linkedinUrl;
     private String profilePicture;
     private String status;
-    @Column(columnDefinition = "DOUBLE DEFAULT 0.0")
-    private Double walletBalance = 0.0;
 
-    @OneToOne(fetch = FetchType.EAGER) // 💡 Eager load කරන්න ෂුවර් වෙන්න
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "authId")
-    @ToString.Exclude // 💡 මේක අනිවාර්යයි (Infinite loop එක නවත්වන්න)
+    @ToString.Exclude
     private Auth auth;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "levelId") // 💡 DB එකේ level_id කියලා column එකක් හැදෙයි
+    @JoinColumn(name = "levelId")
     private Level level;
 
+    @OneToOne(mappedBy = "interviewer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Wallet wallet;
 
 }

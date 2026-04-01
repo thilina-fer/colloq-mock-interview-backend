@@ -46,7 +46,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 if (jwtUtil.validateToken(jwtToken)) {
-                    // Token එකෙන් එන Role එක කෙලින්ම ගන්න (උදා: "ADMIN")
                     String rawRole = jwtUtil.extractRole(jwtToken);
 
                     Auth auth = authRepo.findByUsername(username)
@@ -54,7 +53,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                             .orElse(null);
 
                     if (auth != null && rawRole != null) {
-                        // 🎯 [CHANGE]: ROLE_ prefix එක එකතු නොකර පිරිසිදුව ලබා දීම
                         String formattedRole = rawRole.toUpperCase().trim();
                         SimpleGrantedAuthority authority = new SimpleGrantedAuthority(formattedRole);
 
@@ -81,7 +79,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            System.out.println("❌ [JWT FILTER ERROR]: " + e.getMessage());
+            System.out.println("[JWT FILTER ERROR]: " + e.getMessage());
         }
 
         filterChain.doFilter(request, response);
