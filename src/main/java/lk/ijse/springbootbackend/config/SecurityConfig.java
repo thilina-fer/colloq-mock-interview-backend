@@ -26,49 +26,6 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
-//    @Bean
-//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//        http
-//                .cors(Customizer.withDefaults())
-//                .csrf(AbstractHttpConfigurer::disable)
-//                .authorizeHttpRequests(auth -> auth
-//                        // 1. Public Endpoints
-//                        .requestMatchers(
-//                                "/api/v1/auth/login",
-//                                "/api/v1/auth/register",
-//                                "/api/v1/auth/google",
-//                                "/test/**"
-//                        ).permitAll()
-//                        .requestMatchers(HttpMethod.GET, "/api/v1/levels/**").permitAll()
-//
-//                        // 2. Shared Authenticated Endpoints
-//                        .requestMatchers("/api/v1/auth/me").authenticated()
-//                        .requestMatchers("/api/v1/bookings/**", "/api/v1/booking/**").authenticated()
-//                        .requestMatchers("/api/v1/payments/**").authenticated()
-//                        .requestMatchers("/api/v1/availability/**").authenticated()
-//                        .requestMatchers("/api/v1/interviewer/all").authenticated()
-//                        .requestMatchers("/api/v1/interviewer/complete-interviewer-profile").authenticated()
-//
-//                        // 🎯 3. Admin Only Endpoints (ROLE_ prefix එක නැතිව)
-//                        .requestMatchers("/api/v1/admin/**").hasAnyAuthority("ADMIN")
-//                        .requestMatchers("/api/v1/levels/**").hasAnyAuthority("ADMIN")
-//
-//                        // 🎯 4. Interviewer Specific Endpoints
-//                        .requestMatchers("/api/v1/interviewer/**").hasAnyAuthority("INTERVIEWER", "ADMIN")
-//
-//                        // 🎯 5. Candidate Specific Endpoints
-//                        .requestMatchers("/api/v1/candidate/**").hasAnyAuthority("CANDIDATE", "ADMIN")
-//
-//                        .anyRequest().authenticated()
-//                )
-//                .sessionManagement(session -> session
-//                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-//                )
-//                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-//
-//        return http.build();
-//    }
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -97,8 +54,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/admin/**").permitAll()
                         .requestMatchers("/api/v1/levels/**").hasAnyAuthority("ADMIN")
 
+                                .requestMatchers("/api/v1/bank-account/**").hasAnyAuthority("INTERVIEWER", "ADMIN")
                         // 🎯 4. Interviewer Specific Endpoints (Wallet access ඇතුළත් කළා)
-                        .requestMatchers("/api/v1/wallet/**").hasAnyAuthority("INTERVIEWER", "ADMIN")
+                        .requestMatchers("/api/v1/wallet/**").permitAll()
                         .requestMatchers("/api/v1/interviewer/**").hasAnyAuthority("INTERVIEWER", "ADMIN")
 
                         // 🎯 5. Candidate Specific Endpoints
