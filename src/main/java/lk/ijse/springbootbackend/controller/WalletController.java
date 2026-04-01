@@ -21,4 +21,13 @@ public class WalletController {
         WalletDTO walletDTO = walletService.getMyWallet(authentication.getName());
         return ResponseEntity.ok(new APIResponse(200, "Success", walletDTO));
     }
+
+    @PostMapping("/withdraw")
+    public ResponseEntity<APIResponse> withdraw(
+            @RequestParam("amount") double amount,
+            Authentication auth
+    ) {
+        String message = walletService.withdrawFunds(amount, auth.getName());
+        return ResponseEntity.ok(new APIResponse(200, message, null));
+    }
 }
