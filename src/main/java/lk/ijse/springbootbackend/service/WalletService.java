@@ -7,5 +7,5 @@ import java.util.List;
 public interface WalletService {
     void processTransaction(Long bookingId, Long interviewerId, Double totalAmount);
     WalletDTO getMyWallet(String username);
-    List<SystemProfitDTO> getAllSystemProfits();
+    String withdrawFunds(Double amount, String username);
 }
