@@ -2,16 +2,19 @@ package lk.ijse.springbootbackend.service.impl;
 
 import lk.ijse.springbootbackend.dto.SystemProfitDTO;
 import lk.ijse.springbootbackend.dto.WalletDTO;
+import lk.ijse.springbootbackend.dto.WithdrawalHistoryDTO;
 import lk.ijse.springbootbackend.entity.*;
 import lk.ijse.springbootbackend.repo.*;
 import lk.ijse.springbootbackend.service.SystemProfitService;
 import lk.ijse.springbootbackend.service.WalletService;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +27,7 @@ public class WalletServiceImpl implements WalletService {
     private final AuthRepo authRepo;
     private  final BankAccountRepo bankAccountRepo;
     private final WithdrawalHistoryRepo withdrawalHistoryRepo;
+    private final ModelMapper modelMapper;
 
     @Override
     @Transactional
@@ -105,4 +109,17 @@ public class WalletServiceImpl implements WalletService {
         return "Withdrawal of LKR " + amount + " was successful and processed to your bank account.";
     }
 
+    @Override
+    public List<WithdrawalHistoryDTO> getWithdrawalHistory(String username) {
+        Auth auth = authRepo.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Interviewer interviewer = interviewerRepo.findByAuth(auth)
+                .orElseThrow(() -> new RuntimeException("Interviewer not found"));
+
+        // 🎯 අලුත්ම Transactions උඩට එන විදිහට අරන් DTO වලට map කරනවා
+        return withdrawalHistoryRepo.findAllByInterviewerOrderByWithdrawalDateDesc(interviewer)
+                .stream()
+                .map(history -> modelMapper.map(history, WithdrawalHistoryDTO.class))
+                .collect(Collectors.toList());
+    }
 }
