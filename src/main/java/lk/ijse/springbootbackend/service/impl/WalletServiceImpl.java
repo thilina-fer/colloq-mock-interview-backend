@@ -2,10 +2,8 @@ package lk.ijse.springbootbackend.service.impl;
 
 import lk.ijse.springbootbackend.dto.SystemProfitDTO;
 import lk.ijse.springbootbackend.dto.WalletDTO;
-import lk.ijse.springbootbackend.entity.Interviewer;
-import lk.ijse.springbootbackend.entity.Wallet;
-import lk.ijse.springbootbackend.repo.InterviewerRepo;
-import lk.ijse.springbootbackend.repo.WalletRepo;
+import lk.ijse.springbootbackend.entity.*;
+import lk.ijse.springbootbackend.repo.*;
 import lk.ijse.springbootbackend.service.SystemProfitService;
 import lk.ijse.springbootbackend.service.WalletService;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +21,9 @@ public class WalletServiceImpl implements WalletService {
     private final WalletRepo walletRepo;
     private final InterviewerRepo interviewerRepo;
     private final SystemProfitService systemProfitService;
+    private final AuthRepo authRepo;
+    private  final BankAccountRepo bankAccountRepo;
+    private final WithdrawalHistoryRepo withdrawalHistoryRepo;
 
     @Override
     @Transactional
@@ -67,7 +68,41 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
-    public List<SystemProfitDTO> getAllSystemProfits() {
-        return List.of();
+    @Transactional
+    public String withdrawFunds(Double amount, String username) {
+        System.out.println("🚀 [DEBUG] Withdrawal Request - Amount: " + amount + " | User: " + username);
+
+        Auth auth = authRepo.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Interviewer interviewer = interviewerRepo.findByAuth(auth)
+                .orElseThrow(() -> new RuntimeException("Interviewer not found"));
+
+        BankAccount bankAccount = bankAccountRepo.findByInterviewer(interviewer)
+                .orElseThrow(() -> new RuntimeException("Please link a bank account before withdrawing funds."));
+
+        Wallet wallet = walletRepo.findByInterviewer(interviewer)
+                .orElseThrow(() -> new RuntimeException("Wallet not found"));
+
+        if (wallet.getBalance() < amount) {
+            throw new RuntimeException("Insufficient balance in your wallet.");
+        }
+
+        if (amount < 1000) {
+            throw new RuntimeException("Minimum withdrawal amount is LKR 1,000.00");
+        }
+
+        wallet.setBalance(wallet.getBalance() - amount);
+        wallet.setLastUpdated(LocalDateTime.now());
+        walletRepo.save(wallet);
+
+        WithdrawalHistory history = new WithdrawalHistory();
+        history.setAmount(amount);
+        history.setWithdrawalDate(LocalDateTime.now());
+        history.setInterviewer(interviewer);
+        history.setBankDetails(bankAccount.getBankName() + " - " + bankAccount.getAccountNumber());
+        withdrawalHistoryRepo.save(history);
+
+        return "Withdrawal of LKR " + amount + " was successful and processed to your bank account.";
     }
+
 }
