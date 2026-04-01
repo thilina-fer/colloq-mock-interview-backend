@@ -11,17 +11,16 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Wallet {
+public class WithdrawalHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long walletId;
+    private Long id;
 
-    private Double balance = 0.0;
-    private String status = "ACTIVE";
-    private LocalDateTime lastUpdated;
+    private Double amount;
+    private LocalDateTime withdrawalDate;
+    private String bankDetails;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "interviewerId")
     private Interviewer interviewer;
-
 }

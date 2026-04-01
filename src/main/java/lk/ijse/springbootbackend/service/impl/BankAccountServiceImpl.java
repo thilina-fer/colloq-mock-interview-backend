@@ -26,8 +26,6 @@ public class BankAccountServiceImpl implements BankAccountService {
     @Override
     public String saveBankAccount(BankAccountDTO dto, String username) {
         Interviewer interviewer = getInterviewerByUsername(username);
-
-        // එක්කෙනෙකුට එක බැංකු ගිණුමයි - දැනටමත් තිබේදැයි බලමු
         if (bankAccountRepo.existsByInterviewer(interviewer)) {
             throw new RuntimeException("You already have a linked bank account. Please update the existing one.");
         }

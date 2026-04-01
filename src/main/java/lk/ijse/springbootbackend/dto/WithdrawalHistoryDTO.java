@@ -4,13 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PaymentDto {
+public class WithdrawalHistoryDTO {
+    private Long id;
     private Double amount;
-    private String paymentMethod;
-    private String transactionId;
-    private Long bookingId;
-    private String status;
+    private LocalDateTime withdrawalDate;
+    private String bankDetails;
 }

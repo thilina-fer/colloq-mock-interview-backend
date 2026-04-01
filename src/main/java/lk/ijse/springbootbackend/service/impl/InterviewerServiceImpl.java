@@ -35,39 +35,31 @@ public class InterviewerServiceImpl implements InterviewerService {
     @Override
     @Transactional
     public String completeInterviewerProfile(CompleteInterviewerProfileDTO dto, MultipartFile imageFile, String username) {
-        // 1. Auth User හොයාගන්න
         Auth auth = authRepo.findByUsername(username)
                 .or(() -> authRepo.findByEmail(username))
                 .orElseThrow(() -> new RuntimeException("Auth user not found"));
 
-        // 2. [වැදගත්ම කොටස] Register වෙද්දී හැදුණු Interviewer record එක ගන්න
-        // existsByAuth කියලා check කරලා error එකක් දාන්න එපා!
         Interviewer interviewer = interviewerRepo.findByAuth(auth)
                 .orElseThrow(() -> new RuntimeException("Interviewer record not found. Please register first."));
 
-        // 3. Frontend එකෙන් එන Data ටික Set කරන්න
         interviewer.setBio(dto.getBio());
         interviewer.setCompany(dto.getCompany());
         interviewer.setExperienceYears(dto.getExperienceYears()); // Integer Mapping
         interviewer.setGithubUrl(dto.getGithubUrl());
         interviewer.setLinkedinUrl(dto.getLinkedinUrl());
 
-        // Admin approve කරනකම් PENDING තියන්න
         interviewer.setStatus("PENDING");
 
-        // 4. Specializations List එක String එකක් විදිහට Save කරන්න
         if (dto.getSpecializations() != null && !dto.getSpecializations().isEmpty()) {
             interviewer.setSpecialization(String.join(", ", dto.getSpecializations()));
         }
 
-        // 5. [CRITICAL] Level ID එක අරන් Level Object එක Set කරන්න
         if (dto.getLevelId() != null) {
             Level level = levelRepo.findById(dto.getLevelId())
                     .orElseThrow(() -> new RuntimeException("Level not found with ID: " + dto.getLevelId()));
             interviewer.setLevel(level);
         }
 
-        // 6. Image Upload Logic (Cloudinary)
         try {
             if (imageFile != null && !imageFile.isEmpty()) {
                 Map uploadResult = cloudinary.uploader().upload(imageFile.getBytes(),
@@ -80,7 +72,6 @@ public class InterviewerServiceImpl implements InterviewerService {
             throw new RuntimeException("Image upload failed: " + e.getMessage());
         }
 
-        // 7. Save Objects
         interviewerRepo.save(interviewer);
         auth.setProfileUpdated(true);
         authRepo.save(auth);
@@ -107,7 +98,6 @@ public class InterviewerServiceImpl implements InterviewerService {
             interviewer.setSpecialization(String.join(", ", dto.getSpecializations()));
         }
 
-        // Update Level if provided
         if (dto.getLevelId() != null) {
             Level level = levelRepo.findById(dto.getLevelId())
                     .orElseThrow(() -> new RuntimeException("Level not found"));
@@ -136,15 +126,9 @@ public class InterviewerServiceImpl implements InterviewerService {
         return "Interviewer profile updated successfully";
     }
 
-//    @Override
-//    public List<InterviewerResponseDTO> getAllInterviewers() {
-//        return interviewerRepo.findAll().stream()
-//                .map(this::mapToDTO) // Using improved mapToDTO
-//                .collect(Collectors.toList());
-//    }
 
 
-    // 🎯 Candidate Selection Modal එකට (Active අය විතරයි)
+    //  Candidate Selection Modal
     @Override
     public List<InterviewerResponseDTO> getActiveInterviewers() {
         return interviewerRepo.findAll().stream()
@@ -161,37 +145,8 @@ public class InterviewerServiceImpl implements InterviewerService {
                 .collect(Collectors.toList());
     }
 
-//    private InterviewerResponseDTO mapToDTO(Interviewer interviewer) {
-//        InterviewerResponseDTO dto = new InterviewerResponseDTO();
-//
-//        // Interviewer basic fields
-//        dto.setInterviewerId(interviewer.getInterviewerId());
-//        dto.setBio(interviewer.getBio());
-//        dto.setCompany(interviewer.getCompany());
-//        dto.setExperienceYears(interviewer.getExperienceYears());
-//        dto.setSpecialization(interviewer.getSpecialization());
-//        dto.setStatus(interviewer.getStatus());
-//        dto.setProfilePicture(interviewer.getProfilePicture());
-//
-//        // 🎯 Auth table එකෙන් Username එක ගන්නවා
-//        if (interviewer.getAuth() != null) {
-//            dto.setUsername(interviewer.getAuth().getUsername());
-//        }
-//
-//        // 🎯 Level table එකෙන් නම සහ Price එක ගන්නවා
-//        if (interviewer.getLevel() != null) {
-//            dto.setLevelName(interviewer.getLevel().getName());
-//            dto.setPrice(interviewer.getLevel().getPrice());
-//            dto.setLevelId(interviewer.getLevel().getLevelId());
-//        }
-//
-//        return dto;
-//    }
-
     private InterviewerResponseDTO mapToDTO(Interviewer interviewer) {
         InterviewerResponseDTO dto = new InterviewerResponseDTO();
-
-        // Interviewer basic fields
         dto.setInterviewerId(interviewer.getInterviewerId());
         dto.setBio(interviewer.getBio());
         dto.setCompany(interviewer.getCompany());
@@ -199,18 +154,19 @@ public class InterviewerServiceImpl implements InterviewerService {
         dto.setSpecialization(interviewer.getSpecialization());
         dto.setStatus(interviewer.getStatus());
         dto.setProfilePicture(interviewer.getProfilePicture());
+        if (interviewer.getWallet() != null) {
+            dto.setWalletBalance(interviewer.getWallet().getBalance());
+        } else {
+            dto.setWalletBalance(0.0);
+        }
 
-        // 🎯 [NEW UPDATE]: Wallet Balance එක DTO එකට Set කිරීම
-        dto.setWalletBalance(interviewer.getWalletBalance());
-
-        // Auth table එකෙන් Username එක ගන්නවා
+        // Auth details
         if (interviewer.getAuth() != null) {
             dto.setUsername(interviewer.getAuth().getUsername());
-            // අවැසි නම් Email එකත් මෙතනින්ම set කරන්න පුළුවන්
             dto.setEmail(interviewer.getAuth().getEmail());
         }
 
-        // Level table එකෙන් නම සහ Price එක ගන්නවා
+        // Level details
         if (interviewer.getLevel() != null) {
             dto.setLevelName(interviewer.getLevel().getName());
             dto.setPrice(interviewer.getLevel().getPrice());

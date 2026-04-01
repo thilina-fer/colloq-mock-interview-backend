@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Data
@@ -26,9 +27,10 @@ public class BankAccount {
     @Column(nullable = false, unique = true)
     private String accountNumber;
 
-    private String status; // ACTIVE / INACTIVE
+    private String status;
 
     @OneToOne
     @JoinColumn(name = "interviewer_id", nullable = false, unique = true)
+    @ToString.Exclude
     private Interviewer interviewer;
 }
