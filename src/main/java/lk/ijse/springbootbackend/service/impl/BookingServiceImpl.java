@@ -148,8 +148,6 @@ public class BookingServiceImpl implements BookingService {
     public List<BookingDTO> getApprovedBookingsForInterviewer(String username) {
         Auth auth = authRepo.findByUsername(username).orElseThrow();
         Interviewer interviewer = interviewerRepo.findByAuth(auth).orElseThrow();
-
-        // 🎯 මෙතන Status එක APPROVED ඒවා විතරක් filter කරනවා
         return bookingRepo.findByInterviewer_InterviewerIdAndStatus(
                         interviewer.getInterviewerId(),
                         BookingStatus.APPROVED
@@ -161,17 +159,14 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public List<BookingDTO> getBookingsForCandidate(String username) {
-        // 1. Username එකෙන් Candidate ව හොයාගන්න
         Auth auth = authRepo.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         Candidate candidate = candidateRepo.findByAuth(auth)
                 .orElseThrow(() -> new RuntimeException("Candidate profile not found"));
 
-        // 2. Candidate ID එකෙන් සියලුම bookings ටික ගන්න
         List<Bookings> bookings = bookingRepo.findByCandidate_CandidateId(candidate.getCandidateId());
 
-        // 3. Entity list එක DTO list එකක් බවට හරවලා එවන්න
         return bookings.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -180,19 +175,14 @@ public class BookingServiceImpl implements BookingService {
     private BookingDTO convertToDTO(Bookings booking) {
         BookingDTO dto = modelMapper.map(booking, BookingDTO.class);
 
-        // 1. Interviewer Details (කලින් තිබුණු ඒවා)
         if (booking.getInterviewer() != null && booking.getInterviewer().getAuth() != null) {
             dto.setInterviewerName(booking.getInterviewer().getAuth().getUsername());
             dto.setInterviewerProfilePic(booking.getInterviewer().getAuth().getProfilePic());
         }
 
-        // 2. [FIX]: Candidate Details (මෙන්න මේ ටික තමයි Card එකට ඕනේ)
         if (booking.getCandidate() != null && booking.getCandidate().getAuth() != null) {
-            // Candidate ගේ නම සහ රූපය එන්නේ Auth table එකෙන්
             dto.setCandidateName(booking.getCandidate().getAuth().getUsername());
             dto.setCandidateProfilePic(booking.getCandidate().getAuth().getProfilePic());
-
-            // Github සහ Linkedin එන්නේ Candidate table එකෙන් (ඒවා entity එකේ තියෙන විදිහට field names මාරු කරන්න)
             dto.setCandidateGithub(booking.getCandidate().getGithubUrl());
             dto.setCandidateLinkedin(booking.getCandidate().getLinkedinUrl());
         }

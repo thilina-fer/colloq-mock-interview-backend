@@ -26,10 +26,9 @@ public class GoogleCalendarService {
 
     private static final String APPLICATION_NAME = "ColloQ Mock Interview";
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
-    private static final String TOKENS_DIRECTORY_PATH = "tokens"; // Token එක සේව් වෙන තැන
+    private static final String TOKENS_DIRECTORY_PATH = "tokens";
     private static final List<String> SCOPES = Collections.singletonList(CalendarScopes.CALENDAR);
 
-    // 💡 මෙතනින් තමයි අලුත් ක්‍රමයට ලොග් වෙන්නේ
     private Credential getCredentials(NetHttpTransport HTTP_TRANSPORT) throws Exception {
         InputStream in = getClass().getResourceAsStream("/credentials.json");
         if (in == null) {
@@ -59,7 +58,6 @@ public class GoogleCalendarService {
             event.setStart(new EventDateTime().setDateTime(new com.google.api.client.util.DateTime(startDate)).setTimeZone("Asia/Colombo"));
             event.setEnd(new EventDateTime().setDateTime(new com.google.api.client.util.DateTime(endDate)).setTimeZone("Asia/Colombo"));
 
-            // ✨ Google Meet Setup
             ConferenceSolutionKey solutionKey = new ConferenceSolutionKey().setType("hangoutsMeet");
             CreateConferenceRequest createRequest = new CreateConferenceRequest()
                     .setRequestId(UUID.randomUUID().toString())
@@ -67,12 +65,11 @@ public class GoogleCalendarService {
             ConferenceData conferenceData = new ConferenceData().setCreateRequest(createRequest);
             event.setConferenceData(conferenceData);
 
-            // 🎯 Insert event with conferenceDataVersion = 1
             Event createdEvent = service.events().insert("primary", event)
                     .setConferenceDataVersion(1)
                     .execute();
 
-            // 🔄 Retry logic to get the link
+
             String meetLink = null;
             for (int i = 0; i < 5; i++) {
                 if (createdEvent.getConferenceData() != null &&
@@ -80,7 +77,7 @@ public class GoogleCalendarService {
                     meetLink = createdEvent.getConferenceData().getEntryPoints().get(0).getUri();
                     break;
                 }
-                Thread.sleep(1500); // පොඩි වෙලාවක් ඉමු Google එක ලින්ක් එක හදනකම්
+                Thread.sleep(1500);
                 createdEvent = service.events().get("primary", createdEvent.getId()).execute();
             }
 

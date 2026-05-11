@@ -322,90 +322,6 @@ public class AuthServiceImpl implements AuthService {
         return "User registered successfully";
     }
 
-//    @Override
-//    @Transactional
-//    public AuthResponseDTO authenticateWithGoogle(GoogleAuthDTO googleAuthDTO) {
-//        try {
-//            // 1. Google ID Token එක Verify කිරීම
-//            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
-//                    new NetHttpTransport(), GsonFactory.getDefaultInstance())
-//                    .setAudience(Collections.singletonList(googleClientId))
-//                    .build();
-//
-//            GoogleIdToken googleIdToken = verifier.verify(googleAuthDTO.getIdToken());
-//            if (googleIdToken == null) {
-//                throw new RuntimeException("Invalid Google ID token");
-//            }
-//
-//            // 2. Payload එකෙන් දත්ත ලබා ගැනීම
-//            GoogleIdToken.Payload payload = googleIdToken.getPayload();
-//            String googleId = payload.getSubject();
-//            String email = payload.getEmail();
-//            String name = (String) payload.get("name");
-//
-//            // 3. දැනටමත් ඉන්න User කෙනෙක්ද බලන්න (Google ID හෝ Email එකෙන්)
-//            Auth auth = authRepo.findByGoogleId(googleId)
-//                    .or(() -> authRepo.findByEmail(email))
-//                    .orElse(null);
-//
-//            if (auth == null) {
-//                // 4. අලුත් User කෙනෙක් නම් Auth Record එක හදනවා
-//                auth = Auth.builder()
-//                        .username(email) // 🎯 අලුත් අයගේ Username එකට Email එකම දානවා
-//                        .email(email)
-//                        .googleId(googleId)
-//                        .role(Role.valueOf(googleAuthDTO.getRole()))
-//                        .emailVerified(true)
-//                        .status("ACTIVE")
-//                        .profileUpdated(false)
-//                        .build();
-//
-//                Auth savedAuth = authRepo.save(auth);
-//
-//                // 5. Role එක අනුව අදාළ Profile Table එකේ record එක හදනවා
-//                if (savedAuth.getRole() == Role.CANDIDATE) {
-//                    Candidate candidate = new Candidate();
-//                    candidate.setAuth(savedAuth);
-//                    candidate.setBio("Professional Candidate at ColloQ"); // Default bio
-//                    candidate.setJoinDate(String.valueOf(java.time.LocalDate.now()));
-//                    candidate.setStatus("ACTIVE");
-//                    candidateRepo.save(candidate);
-//                } else if (savedAuth.getRole() == Role.INTERVIEWER) {
-//                    Interviewer interviewer = new Interviewer();
-//                    interviewer.setAuth(savedAuth);
-//                    interviewer.setStatus("PENDING");
-//                    interviewerRepo.save(interviewer);
-//                }
-//                auth = savedAuth;
-//            } else {
-//                // 6. පරණ User කෙනෙක් නම්, අඩුපාඩු තියෙනවද බලලා Update කරනවා (Safety Check)
-//                boolean updateRequired = false;
-//
-//                // 🎯 පරණ රෙකෝඩ් එකේ username එක null නම්, ඒකත් fix කරනවා
-//                if (auth.getUsername() == null || auth.getUsername().isEmpty()) {
-//                    auth.setUsername(email);
-//                    updateRequired = true;
-//                }
-//                if (auth.getGoogleId() == null) {
-//                    auth.setGoogleId(googleId);
-//                    updateRequired = true;
-//                }
-//
-//                if (updateRequired) {
-//                    auth = authRepo.save(auth);
-//                }
-//            }
-//
-//            // 7. JWT Token එක Generate කරලා Return කරනවා
-//            String token = jwtUtil.generateToken(auth.getUsername(), auth.getRole().name());
-//            return new AuthResponseDTO(token, auth.getRole().name());
-//
-//        } catch (Exception e) {
-//            // 🎯 ඇත්තම Error එක Console එකේ ප්‍රින්ට් කරනවා (Debugging ලේසි වෙන්න)
-//            e.printStackTrace();
-//            throw new RuntimeException("Google authentication failed: " + e.getMessage());
-//        }
-//    }
 
     @Override
     @Transactional
@@ -422,30 +338,25 @@ public class AuthServiceImpl implements AuthService {
                 throw new RuntimeException("Invalid Google ID token");
             }
 
-            // 2. Payload එකෙන් දත්ත ලබා ගැනීම
             GoogleIdToken.Payload payload = googleIdToken.getPayload();
             String googleId = payload.getSubject();
             String email = payload.getEmail();
 
-            // 🎯 අලුත් වෙනස: Google එකෙන් එවන නම සහ ෆොටෝ එක ලබා ගැනීම
             String name = (String) payload.get("name");
             String pictureUrl = (String) payload.get("picture");
 
-            // 3. දැනටමත් ඉන්න User කෙනෙක්ද බලන්න
             Auth auth = authRepo.findByGoogleId(googleId)
                     .or(() -> authRepo.findByEmail(email))
                     .orElse(null);
 
             if (auth == null) {
-                // Google නමක් නැත්නම් email එකේ @ එකට කලින් කෑල්ල ගන්නවා (fallback)
                 String defaultUsername = (name != null && !name.isEmpty()) ? name : email.split("@")[0];
 
-                // 4. අලුත් User කෙනෙක් නම් Auth Record එක හදනවා
                 auth = Auth.builder()
-                        .username(defaultUsername) // 🎯 Email එක වෙනුවට ඇත්ත නම සේව් කරනවා
+                        .username(defaultUsername)
                         .email(email)
                         .googleId(googleId)
-                        .profilePic(pictureUrl) // 🎯 Google Profile Photo එක සේව් කරනවා
+                        .profilePic(pictureUrl)
                         .role(Role.valueOf(googleAuthDTO.getRole()))
                         .emailVerified(true)
                         .status("ACTIVE")
@@ -454,7 +365,6 @@ public class AuthServiceImpl implements AuthService {
 
                 Auth savedAuth = authRepo.save(auth);
 
-                // 5. Role එක අනුව අදාළ Profile Table එකේ record එක හදනවා
                 if (savedAuth.getRole() == Role.CANDIDATE) {
                     Candidate candidate = new Candidate();
                     candidate.setAuth(savedAuth);
@@ -470,15 +380,12 @@ public class AuthServiceImpl implements AuthService {
                 }
                 auth = savedAuth;
             } else {
-                // 6. පරණ User කෙනෙක් නම්, අඩුපාඩු update කරනවා
                 boolean updateRequired = false;
 
-                // පරණ රෙකෝඩ් එකේ username එක email එකම නම්, ඒක නමට මාරු කරනවා
                 if (auth.getUsername() == null || auth.getUsername().equals(email)) {
                     auth.setUsername((name != null && !name.isEmpty()) ? name : email.split("@")[0]);
                     updateRequired = true;
                 }
-                // ෆොටෝ එකක් නැත්නම් ඒක update කරනවා
                 if (auth.getProfilePic() == null && pictureUrl != null) {
                     auth.setProfilePic(pictureUrl);
                     updateRequired = true;
@@ -493,7 +400,6 @@ public class AuthServiceImpl implements AuthService {
                 }
             }
 
-            // 7. JWT Token Generate කිරීම
             String token = jwtUtil.generateToken(auth.getUsername(), auth.getRole().name());
             return new AuthResponseDTO(token, auth.getRole().name());
 

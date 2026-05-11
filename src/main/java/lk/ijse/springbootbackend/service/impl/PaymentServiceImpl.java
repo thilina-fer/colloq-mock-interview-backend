@@ -36,8 +36,6 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         Double actualPrice = booking.getLevel().getPrice();
-
-        //Payment Record
         Payments payment = new Payments();
         payment.setAmount(actualPrice);
         payment.setPaymentMethod(paymentDto.getPaymentMethod());
@@ -47,7 +45,6 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setBookings(booking);
         paymentRepo.save(payment);
 
-        // 2.Google Meet Link
         try {
             java.util.Date startDate = java.sql.Timestamp.valueOf(LocalDateTime.of(booking.getAvailability().getDate(), booking.getAvailability().getStartTime()));
             java.util.Date endDate = java.sql.Timestamp.valueOf(LocalDateTime.of(booking.getAvailability().getDate(), booking.getAvailability().getEndTime()));
@@ -62,7 +59,6 @@ public class PaymentServiceImpl implements PaymentService {
             booking.setMeetingLink("Link Generation Failed");
         }
 
-        // 3. Booking Update
         booking.setPaid(true);
         booking.setStatus(BookingStatus.APPROVED);
         bookingRepo.save(booking);

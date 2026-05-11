@@ -116,7 +116,6 @@ public class WalletServiceImpl implements WalletService {
         Interviewer interviewer = interviewerRepo.findByAuth(auth)
                 .orElseThrow(() -> new RuntimeException("Interviewer not found"));
 
-        // 🎯 අලුත්ම Transactions උඩට එන විදිහට අරන් DTO වලට map කරනවා
         return withdrawalHistoryRepo.findAllByInterviewerOrderByWithdrawalDateDesc(interviewer)
                 .stream()
                 .map(history -> modelMapper.map(history, WithdrawalHistoryDTO.class))

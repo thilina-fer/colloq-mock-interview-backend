@@ -21,39 +21,33 @@ public class LevelServiceImpl implements LevelService {
 
     @Override
     public String createLevel(LevelDTO dto) {
-        // 1. නම දැනටමත් තියෙනවද බලන්න (Case-insensitive)
         if (levelRepo.findByName(dto.getName().toUpperCase()).isPresent()) {
             throw new RuntimeException("Level name already exists: " + dto.getName());
         }
 
-        // 2. DTO එක Entity එකකට Map කිරීම
         Level level = new Level();
-        level.setName(dto.getName().toUpperCase()); // ලෙවල් නම හැමතිස්සෙම Capital තිබීම හොඳයි (INTERN, SENIOR)
+        level.setName(dto.getName().toUpperCase());
         level.setSessionDuration(dto.getSessionDuration());
         level.setPrice(dto.getPrice());
 
-        // 3. Status එක default "ACTIVE" කිරීම
         if (dto.getStatus() == null || dto.getStatus().isEmpty()) {
             level.setStatus("ACTIVE");
         } else {
             level.setStatus(dto.getStatus());
         }
 
-        // 4. Save කිරීම
         levelRepo.save(level);
 
         return "Level created successfully";
     }
 
     @Override
-    @Transactional // 💡 Transactional පාවිච්චි කිරීමෙන් DB integrity එක ආරක්ෂා වේ
+    @Transactional
     public String updateLevel(Long id, LevelDTO dto) {
-        // 1. පරණ Level එක තියෙනවද බලන්න
+
         Level existingLevel = levelRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Level not found with ID: " + id));
 
-        // 2. නම වෙනස් කරනවා නම්, ඒ නමින් වෙනත් Level එකක් දැනටමත් තියෙනවද බලන්න
-        // 💡 මෙතන trim() සහ toUpperCase() පාවිච්චි කිරීමෙන් " intern" වගේ වැරදි මගහැරේ
         String newName = dto.getName().trim().toUpperCase();
 
         levelRepo.findByName(newName).ifPresent(l -> {
@@ -62,10 +56,9 @@ public class LevelServiceImpl implements LevelService {
             }
         });
 
-        // 3. අගයන් Update කිරීම
+
         existingLevel.setName(newName);
 
-        // 💡 Null safety: Frontend එකෙන් වැරදිලාවත් null ආවොත් පරණ අගයම තියාගන්න
         if (dto.getSessionDuration() != null) {
             existingLevel.setSessionDuration(dto.getSessionDuration());
         }
@@ -78,7 +71,6 @@ public class LevelServiceImpl implements LevelService {
             existingLevel.setStatus(dto.getStatus());
         }
 
-        // 4. Save කිරීම
         levelRepo.save(existingLevel);
 
         return "Level updated successfully";
@@ -92,8 +84,6 @@ public class LevelServiceImpl implements LevelService {
             LevelDTO dto = new LevelDTO();
             dto.setLevelId(level.getLevelId());
             dto.setName(level.getName());
-
-            // ✅ මේ පේළි දෙක අලුතින් එකතු කරන්න:
             dto.setSessionDuration(level.getSessionDuration());
             dto.setPrice(level.getPrice());
             dto.setStatus(level.getStatus());

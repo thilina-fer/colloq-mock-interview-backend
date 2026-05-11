@@ -19,14 +19,11 @@ public class OllamaService {
     @Value("${ollama.model.name}")
     private String modelName;
 
-    // Constructor Injection හරහා RestClient එක initialize කිරීම
     public OllamaService() {
         this.restClient = RestClient.builder().build();
     }
 
     public String getInterviewResponse(String systemPrompt, String userMessage) {
-
-        // Request Body එක වඩාත් පැහැදිලිව
         Map<String, Object> requestBody = Map.of(
                 "model", modelName,
                 "prompt", String.format("%s\n\nUser Input: %s", systemPrompt, userMessage),
@@ -47,7 +44,6 @@ public class OllamaService {
                     .orElse("AI produced an empty response.");
 
         } catch (Exception e) {
-            // Log එකක් දැමීමෙන් debug කිරීම පහසු වේ
             System.err.println("Ollama Service Error: " + e.getMessage());
             return "Interview Service is currently unavailable. Please ensure your local AI engine is running.";
         }

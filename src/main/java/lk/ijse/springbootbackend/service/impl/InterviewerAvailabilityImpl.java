@@ -33,10 +33,9 @@ public class InterviewerAvailabilityImpl implements InterviewerAvailabilityServi
 
     @Override
     @Transactional
-    public String saveAvailabilityBatch(List<InterviewerAvailabilityDTO> dtos, String username) { // 🎯 Username එක parameter එකක් විදිහට ගන්න
+    public String saveAvailabilityBatch(List<InterviewerAvailabilityDTO> dtos, String username) {
         if (dtos.isEmpty()) return "No slots to save";
 
-        // 1. [FIX]: Frontend එකෙන් එවන ID එක වෙනුවට Token එකේ ඉන්න User හරහා Interviewer ව හොයාගන්න
         Auth auth = authRepo.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Auth user not found"));
 
@@ -56,7 +55,6 @@ public class InterviewerAvailabilityImpl implements InterviewerAvailabilityServi
                 availability.setStartTime(LocalTime.parse(dto.getStartTime(), timeFormatter));
                 availability.setEndTime(LocalTime.parse(dto.getEndTime(), timeFormatter));
 
-                // 🎯 මෙතන දැන් නිවැරදි Interviewer (Amal ද Kamal ද කියලා) set වෙනවා
                 availability.setInterviewer(interviewer);
                 availability.setBooked(false);
 
@@ -72,29 +70,26 @@ public class InterviewerAvailabilityImpl implements InterviewerAvailabilityServi
     }
 
     @Override
-    public List<InterviewerAvailabilityDTO> getAllAvailabilities(String username) { // 🎯 Username එක parameter එකක් විදිහට ගත්තා
+    public List<InterviewerAvailabilityDTO> getAllAvailabilities(String username) {
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH);
 
-        // 1. [FIX]: Token එකෙන් එන Username එක හරහා ලොග් වෙලා ඉන්න Interviewer ව හොයාගන්න
         Auth auth = authRepo.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Auth user not found"));
 
         Interviewer interviewer = interviewerRepo.findByAuth(auth)
                 .orElseThrow(() -> new RuntimeException("Interviewer profile not found"));
 
-        Long currentInterviewerId = interviewer.getInterviewerId(); // 🎯 දැන් මේක Dynamic (1, 2, 3...)
+        Long currentInterviewerId = interviewer.getInterviewerId();
 
         return availabilityRepo.findByInterviewer_InterviewerId(currentInterviewerId).stream()
                 .map(s -> {
                     InterviewerAvailabilityDTO dto = new InterviewerAvailabilityDTO();
                     dto.setAvailabilityId(s.getAvailabilityId());
 
-                    // ✅ Entity (LocalDate) -> DTO (String)
                     if (s.getDate() != null) {
                         dto.setDate(s.getDate().toString());
                     }
 
-                    // ✅ Entity (LocalTime) -> DTO (String) "09:00 AM" format එකට
                     if (s.getStartTime() != null) {
                         dto.setStartTime(s.getStartTime().format(timeFormatter));
                     }
@@ -117,11 +112,9 @@ public class InterviewerAvailabilityImpl implements InterviewerAvailabilityServi
     @Override
     @Transactional
     public String deleteAvailability(Long id) {
-        // 1. Slot එක තියෙනවාද බලනවා
         InterviewerAvailability availability = availabilityRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Slot not found with ID: " + id));
 
-        // 2. 💡 වැදගත්: Book කරපු slot එකක් delete කරන්න දෙන්න එපා
         if (availability.isBooked()) {
             throw new RuntimeException("Cannot delete! This slot is already booked by a candidate.");
         }
