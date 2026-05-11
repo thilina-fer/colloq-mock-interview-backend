@@ -31,7 +31,6 @@ public class AuthController {
 
     @GetMapping("/me")
     public AuthMeDTO me(Authentication authentication){
-        // 🎯 මේ check එක අනිවාර්යයෙන්ම දාන්න
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User is not authenticated");
         }

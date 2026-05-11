@@ -20,7 +20,6 @@ public class CandidateController {
 
     private final CandidateService candidateService;
 
-    // COMPLETE PROFILE - Multipart form data support add kala
     @PostMapping(value = "/complete-profile", consumes = {"multipart/form-data"})
     public ResponseEntity<APIResponse> completeProfile(
             @RequestPart("data") CompleteCandidateProfileDTO dto,
@@ -35,14 +34,11 @@ public class CandidateController {
             @RequestPart("data") CandidateResponseDTO dto,
             @RequestPart(value = "image", required = false) MultipartFile imageFile,
             Authentication authentication) {
-
-        // 1. Service eken ena updated object eka ganna
         CandidateResponseDTO updatedData = candidateService.updateCandidateProfile(dto, imageFile, authentication.getName());
 
-        // 2. Eka APIResponse eke 3weni parameter eka (data field eka) widiyata yawanna
         return ResponseEntity.ok(new APIResponse(200, "Candidate profile updated successfully", updatedData));
     }
-    // DELETE
+
     @DeleteMapping("/delete-profile/{candidateId}")
     public ResponseEntity<APIResponse> deleteProfile(@PathVariable Long candidateId,
                                                      Authentication authentication) {
@@ -50,7 +46,6 @@ public class CandidateController {
         return ResponseEntity.ok(new APIResponse(200, msg, null));
     }
 
-    // GET ALL
     @GetMapping("/all")
     public ResponseEntity<APIResponse> getAllCandidates() {
         List<CandidateResponseDTO> data = candidateService.getAllCandidates();

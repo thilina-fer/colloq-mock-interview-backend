@@ -19,7 +19,6 @@ public class LevelController {
 
     private final LevelService levelService;
 
-    // 🚀 Create Level
     @PostMapping
     public ResponseEntity<APIResponse> createLevel(@RequestBody LevelDTO dto) {
         String response = levelService.createLevel(dto);
@@ -31,9 +30,6 @@ public class LevelController {
 
     @GetMapping("/all")
     public ResponseEntity<APIResponse> getAllLevels() {
-        // 💡 මෙතන sout එකක් දාලා බලන්න API එකට request එක එනවද කියලා
-        System.out.println("--- Request received at LevelController ---");
-
         List<LevelDTO> allLevels = levelService.getAllLevels();
         return new ResponseEntity<>(
                 new APIResponse(200, "Success", allLevels),
@@ -41,7 +37,6 @@ public class LevelController {
         );
     }
 
-    // 🚀 Get Level By ID
     @GetMapping("/{id}")
     public ResponseEntity<APIResponse> getLevelById(@PathVariable Long id) {
         LevelDTO level = levelService.getLevelById(id);
@@ -51,7 +46,6 @@ public class LevelController {
         );
     }
 
-    // 🚀 Update Level
     @PutMapping("/{id}")
     public ResponseEntity<APIResponse> updateLevel(
             @PathVariable("id") Long id, // 👈 මෙතන ("id") කියලා අනිවාර්යයෙන්ම දාන්න
@@ -64,7 +58,6 @@ public class LevelController {
         );
     }
 
-    // 🚀 Delete Level එකටත් මේකම කරන්න අමතක කරන්න එපා
     @DeleteMapping("/{id}")
     public ResponseEntity<APIResponse> deleteLevel(@PathVariable("id") Long id) { // 👈 මෙතනත් ("id")
         String response = levelService.deleteLevel(id);

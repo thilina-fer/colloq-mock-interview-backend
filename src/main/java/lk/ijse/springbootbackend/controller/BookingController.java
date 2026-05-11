@@ -32,13 +32,11 @@ public class BookingController {
     }
 
     @PutMapping("/approve/{bookingId}")
-    public ResponseEntity<String> approveBooking(@PathVariable("bookingId") Long bookingId) { // 🎯 ("bookingId") කියලා පැහැදිලිවම දාන්න
+    public ResponseEntity<String> approveBooking(@PathVariable("bookingId") Long bookingId) {
         try {
-//            System.out.println("🚀 [Backend] Approving Booking ID: " + bookingId);
             String result = bookingService.updateBookingStatus(bookingId, BookingStatus.APPROVED);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-//            System.err.println(" [Backend] Error: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
@@ -56,12 +54,11 @@ public class BookingController {
 
     @GetMapping("/interviewer/my-requests")
     public ResponseEntity<List<BookingDTO>> getForInterviewer(Principal principal) {
-        // principal.getName() එකෙන් ලොග් වෙලා ඉන්න Interviewer ගේ Username එක Service එකට යනවා
         return ResponseEntity.ok(bookingService.getBookingsByInterviewer(principal.getName()));
     }
 
     @GetMapping("/candidate/{id}")
-    public ResponseEntity<List<BookingDTO>> getForCandidate(@PathVariable("id") Long id) { // 🎯 මෙතන ("id") කියලා අනිවාර්යයෙන්ම දාන්න
+    public ResponseEntity<List<BookingDTO>> getForCandidate(@PathVariable("id") Long id) {
         return ResponseEntity.ok(bookingService.getBookingsByCandidate(id));
     }
 

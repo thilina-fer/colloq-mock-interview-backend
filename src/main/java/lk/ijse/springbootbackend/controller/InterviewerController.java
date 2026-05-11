@@ -106,26 +106,22 @@ import java.util.List;
 public class InterviewerController {
     private final InterviewerService interviewerService;
 
-    // COMPLETE PROFILE - Level selection සහ Image upload එකත් එක්ක
     @PostMapping(value = "/complete-interviewer-profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<APIResponse> completeProfile(
             @RequestPart("data") CompleteInterviewerProfileDTO dto,
             @RequestPart(value = "image", required = false) MultipartFile image,
             Authentication authentication) {
 
-        // Service එකේදී දැන් dto.levelId සහ image එක handle වෙනවා
         String result = interviewerService.completeInterviewerProfile(dto, image, authentication.getName());
         return ResponseEntity.ok(new APIResponse(200, "Success", result));
     }
 
-    // READ OWN PROFILE
     @GetMapping("/profile")
     public ResponseEntity<APIResponse> getProfile(Authentication authentication) {
         InterviewerResponseDTO data = interviewerService.getInterviewerProfile(authentication.getName());
         return ResponseEntity.ok(new APIResponse(200, "Success", data));
     }
 
-    // UPDATE PROFILE
     @PutMapping(value = "/update-profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<APIResponse> updateProfile(
             @RequestPart("data") CompleteInterviewerProfileDTO dto,
@@ -136,7 +132,6 @@ public class InterviewerController {
         return ResponseEntity.ok(new APIResponse(200, "Profile updated successfully", result));
     }
 
-    // DELETE PROFILE
     @DeleteMapping("/delete-profile/{interviewerId}")
     public ResponseEntity<APIResponse> deleteProfile(
             @PathVariable Long interviewerId,
@@ -145,27 +140,17 @@ public class InterviewerController {
         return ResponseEntity.ok(new APIResponse(200, msg, null));
     }
 
-    // 🎯 ලොග් වුණු ඕනෑම කෙනෙක්ට ACTIVE experts ලා බලන්න (Modal එක සඳහා)
     @GetMapping("/all")
     public ResponseEntity<APIResponse> getActiveInterviewers() {
         List<InterviewerResponseDTO> interviewers = interviewerService.getActiveInterviewers();
         return ResponseEntity.ok(new APIResponse(200, "Success", interviewers));
     }
 
-    // 🎯 Admin ට විතරක් හැමෝවම පාලනය කරන්න
     @GetMapping("/admin/all")
     public ResponseEntity<APIResponse> getAllForAdmin() {
         List<InterviewerResponseDTO> interviewers = interviewerService.getAllInterviewersForAdmin();
         return ResponseEntity.ok(new APIResponse(200, "Success", interviewers));
     }
-
-//
-//    // GET ALL INTERVIEWERS - Candidate Dashboard එකට
-//    @GetMapping("/all")
-//    public ResponseEntity<List<InterviewerResponseDTO>> getAllInterviewers() {
-//        // 🎯 Service එකේදී අපි price සහ levelName set කරන නිසා මෙතනින් එන JSON එකේ ඒ දත්ත තියෙයි
-//        return ResponseEntity.ok(interviewerService.getAllInterviewers());
-//    }
 
 
 

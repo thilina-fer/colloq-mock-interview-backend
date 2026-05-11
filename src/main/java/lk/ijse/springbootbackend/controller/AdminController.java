@@ -18,7 +18,7 @@ import java.util.List;
 @RequestMapping("/api/v1/admin")
 @RequiredArgsConstructor
 @CrossOrigin("http://localhost:5173")
-//@PreAuthorize("hasAnyAuthority('ADMIN')")
+
 public class AdminController {
 
     private final AuthService authService;
@@ -36,22 +36,13 @@ public class AdminController {
     }
 
 
-//    @GetMapping("/pending-interviewers")
-//    public ResponseEntity<APIResponse> getPending() {
-//        System.out.println("🚀 [CRITICAL DEBUG] AdminController hit successful!");
-//        return ResponseEntity.ok(new APIResponse(200, "Success", interviewerService.getPendingInterviewers()));
-//    }
-
     @GetMapping("/pending-interviewers")
     public ResponseEntity<APIResponse> getPending() {
-//        System.out.println("[DEBUG] AdminController: getPending method HITTED!");
 
         try {
             List data = interviewerService.getPendingInterviewers();
-           // System.out.println("[DEBUG] Data fetched size: " + (data != null ? data.size() : "NULL"));
             return ResponseEntity.ok(new APIResponse(200, "Success", data));
         } catch (Exception e) {
-//            System.out.println("[DEBUG] Error in Service: " + e.getMessage());
             throw e;
         }
     }
