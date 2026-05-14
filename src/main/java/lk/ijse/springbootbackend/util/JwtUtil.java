@@ -20,7 +20,6 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String secret;
 
-    // 💡 Secret Key එක හැමවෙලේම byte array එකකින් generate කරගන්න helper method එකක්
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
@@ -35,7 +34,6 @@ public class JwtUtil {
                 .compact();
     }
 
-    // 💡 Claims ඔක්කොම එකපාර ගන්න method එකක් (Code duplication අඩු කරන්න)
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
                 .setSigningKey(getSigningKey())
@@ -53,7 +51,7 @@ public class JwtUtil {
         try {
             return extractClaim(token, Claims::getSubject);
         } catch (Exception e) {
-            return null; // 💡 Token එක අවුල් නම් 500 නොදී null දෙන්න
+            return null;
         }
     }
 
@@ -74,7 +72,7 @@ public class JwtUtil {
                     .parseClaimsJws(token);
             return !isTokenExpired(token);
         } catch (Exception e) {
-            return false; // 💡 Invalid token එකක් ආවොත් crash වෙන්න නොදී false කරන්න
+            return false;
         }
     }
 

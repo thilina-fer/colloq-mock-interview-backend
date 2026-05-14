@@ -31,6 +31,7 @@ public class InterviewerServiceImpl implements InterviewerService {
     private final LevelRepo levelRepo; // 🎯 Inject LevelRepo
     private final Cloudinary cloudinary;
     private final ModelMapper modelMapper;
+    private final EmailService emailService;
 
     @Override
     @Transactional
@@ -209,6 +210,7 @@ public class InterviewerServiceImpl implements InterviewerService {
         Interviewer interviewer = interviewerRepo.findById(interviewerId)
                 .orElseThrow(() -> new RuntimeException("Interviewer not found with ID: " + interviewerId));
 
+        // Status වෙනස් කිරීම
         interviewer.setStatus("ACTIVE");
 
         if (interviewer.getAuth() != null) {
@@ -217,6 +219,31 @@ public class InterviewerServiceImpl implements InterviewerService {
         }
 
         Interviewer savedInterviewer = interviewerRepo.save(interviewer);
+
+
+        try {
+            if (savedInterviewer.getAuth() != null) {
+                String email = savedInterviewer.getAuth().getEmail();
+                String name = savedInterviewer.getAuth().getUsername(); // Username එක ගන්නවා
+
+                String emailSubject = "Congratulations! Your ColloQ Interviewer Account is Approved 🎉";
+                String emailBody = "Hi " + name + ",\n\n"
+                        + "Great news! Your account has been officially approved by the ColloQ Admin team.\n\n"
+                        + "You can now log in to your dashboard and start setting your availability to conduct expert mock interviews.\n\n"
+                        + "Login Here: http://localhost:5173/login\n\n"
+                        + "We are excited to have you on board!\n\n"
+                        + "Best Regards,\n"
+                        + "The ColloQ Team";
+
+                // EmailService හරහා ඊමේල් එක යැවීම
+                emailService.sendReportEmail(email, emailSubject, emailBody);
+            }
+        } catch (Exception e) {
+            // Email යවන්න බැරි වුණත් Transaction එක Rollback වෙන්නේ නෑ
+            System.err.println("Interviewer approved successfully, but failed to send email: " + e.getMessage());
+        }
+        // ==========================================
+
         return mapToDTO(savedInterviewer);
     }
 

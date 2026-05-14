@@ -47,7 +47,6 @@ public class AdminController {
         }
     }
 
-
     @PutMapping("/approve-interviewer/{id}")
     public ResponseEntity<APIResponse> approveInterviewer(@PathVariable("id") Long interviewerId) {
         InterviewerResponseDTO approvedDto = interviewerService.approveInterviewer(interviewerId);
